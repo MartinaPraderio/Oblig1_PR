@@ -1,24 +1,33 @@
 ﻿using System;
 using System.Net;
 using System.Net.Sockets;
+using System.Threading;
+using ProtocolData;
+using BusinessLogic;
+using Microsoft.Extensions.Configuration;
 
 namespace Client
 {
     class ClientProgram
     {
-        private const string ServerIpAdress = "127.0.0.1";
 
-        private const int ServerPort = 6000;
+        private static IConfiguration builder = new ConfigurationBuilder().AddJsonFile($"settings.json",true, true).Build();
 
-        private const string ClientIpAdress = "127.0.0.1";
+        private static string ServerIpAdress = builder["ServerIpAdress"];
 
-        private const int ClientPort = 6001;
+        private static int ServerPort = Int32.Parse(builder["ServerPort"]);
+
+        private static string ClientIpAdress = builder["ClientIpAdress"];
+
+        private static int ClientPort = Int32.Parse(builder["ClientPort"]);
 
         private static Socket clientSocket;
 
         private static IPEndPoint clientEndPoint;
 
         private static IPEndPoint serverIPEndPoint;
+
+        private static ClientServicesManager ClientServicesManager;
 
         public static void conectToServer()
         {
@@ -58,10 +67,10 @@ namespace Client
                 string userName = Console.ReadLine();
 
 
-                new Thread(() => ProtocoloIntercambioProgram.Listen(clientSocket)).Start();
+                new Thread(() => ProtocolDataProgram.Listen(clientSocket)).Start();
                 Console.WriteLine("Connected to server");
 
-                ProtocoloIntercambioProgram.Send(clientSocket);
+                ProtocolDataProgram.Send(clientSocket);
 
                 Console.WriteLine("Bienvenido a la plataforma");
                 Console.WriteLine("Menu:");
@@ -75,41 +84,47 @@ namespace Client
 
                 string menuOption = Console.ReadLine();
 
-                switch (menuOption)
+                while (menuOption!="7")
                 {
-                    case "1":
-                        {
+                    switch (menuOption)
+                    {
+                        case "1":
+                            {
 
-                            break;
-                        }
-                    case "2":
-                        {
-                            break;
-                        }
-                    case "3":
-                        {
-                            break;
-                        }
-                    case "4":
-                        {
-                            break;
-                        }
-                    case "5":
-                        {
-                            break;
-                        }
-                    case "6":
-                        {
-                            break;
-                        }
-                    case "7":
-                        {
-                            clientSocket.Shutdown(SocketShutdown.Both);
-                            clientSocket.Close();
-                            Console.WriteLine("7- Cliente desconectado del servidor!");
-                            break;
-                        }
+                                break;
+                            }
+                        case "2":
+                            {
+                                break;
+                            }
+                        case "3":
+                            {
+                                break;
+                            }
+                        case "4":
+                            {
+                                break;
+                            }
+                        case "5":
+                            {
+                                break;
+                            }
+                        case "6":
+                            {
+                                break;
+                            }
+                        case "7":
+                            {
+                                clientSocket.Shutdown(SocketShutdown.Send);
+                                clientSocket.Close();
+                                Console.WriteLine("7- Cliente desconectado del servidor!");
+                                break;
+                            }
+                    }
+
                 }
+
+               
             }
             
         }

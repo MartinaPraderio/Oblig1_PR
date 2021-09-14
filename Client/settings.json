@@ -1,0 +1,6 @@
+﻿{
+  "ServerIpAdress": "127.0.0.1",
+  "ServerPort": "6000",
+  "ClientIpAdress": "127.0.0.1",
+  "ClientPort" : "6001"
+}

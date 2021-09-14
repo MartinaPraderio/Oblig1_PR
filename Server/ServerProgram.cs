@@ -2,17 +2,20 @@
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
+using Microsoft.Extensions.Configuration;
 using ProtocolData;
 
 namespace Server
 {
     class ServerProgram
     {
-        private const string ServerIpAdress = "127.0.0.1";
-        private const int ServerPort = 6000;
-        private const int Backlog = 100;
+        private static IConfiguration builder = new ConfigurationBuilder().AddJsonFile($"settings.json", true, true).Build();
 
+        private static string ServerIpAdress = builder["ServerIpAdress"];
 
+        private static int ServerPort = Int32.Parse(builder["ServerPort"]);
+
+        private static int Backlog = Int32.Parse(builder["Backlog"]);
 
         static void Main(string[] args)
         {
@@ -33,8 +36,8 @@ namespace Server
             {
                 Console.WriteLine("Esperando por conexiones....");
                 var handler = serverSocket.Accept();
-                new Thread(() => ProtocolData.Listen(handler)).Start();
-                ProtocolData.Send(handler);
+                new Thread(() => ProtocolDataProgram.Listen(handler)).Start();
+                ProtocolDataProgram.Send(handler);
             }
 
             Console.WriteLine("Client connected to the server!");
