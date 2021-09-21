@@ -7,7 +7,7 @@ using ProtocolData;
 
 namespace Server
 {
-    class ServerProgram
+    public class ServerProgram
     {
         private static IConfiguration builder = new ConfigurationBuilder().AddJsonFile($"settings.json", true, true).Build();
 
@@ -16,6 +16,8 @@ namespace Server
         private static int ServerPort = Int32.Parse(builder["ServerPort"]);
 
         private static int Backlog = Int32.Parse(builder["Backlog"]);
+
+
 
         static void Main(string[] args)
         {
@@ -28,20 +30,27 @@ namespace Server
 
             IPEndPoint serverIPEndPoint = new IPEndPoint(IPAddress.Parse(ServerIpAdress),ServerPort);
 
-            serverSocket.Bind(serverIPEndPoint);
-            serverSocket.Listen(Backlog);
-            Console.WriteLine("Start listening 4 client");
-
-            while (true)
+            try
             {
-                Console.WriteLine("Esperando por conexiones....");
-                var handler = serverSocket.Accept();
-                new Thread(() => ProtocolDataProgram.Listen(handler)).Start();
-                ProtocolDataProgram.Send(handler);
+                serverSocket.Bind(serverIPEndPoint);
+                serverSocket.Listen(Backlog);
+                Console.WriteLine("Start listening for client");
+
+                while (true)
+                {
+                    Console.WriteLine("Esperando por conexiones....");
+                    var handler = serverSocket.Accept();
+                    new Thread(() => ProtocolDataProgram.Listen(handler)).Start();
+                    ProtocolDataProgram.Send(handler);
+                }
+
             }
 
-            Console.WriteLine("Client connected to the server!");
-            Console.ReadLine();
+            catch (SocketException s)
+            {
+                Console.WriteLine("Excepcion: " + s.Message + ", Error Code: " + s.ErrorCode + ", Scoket Error Code: " + s.SocketErrorCode);
+            }
+
         }
 
        

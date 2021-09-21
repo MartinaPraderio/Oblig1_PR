@@ -50,6 +50,19 @@ namespace Client
 
         }
 
+        public static void printMenu()
+        {
+            Console.WriteLine("Menu:");
+            Console.WriteLine("1- Publicar juego");
+            Console.WriteLine("2- Eliminar juego");
+            Console.WriteLine("3- Modificar juego");
+            Console.WriteLine("4- Buscar juego");
+            Console.WriteLine("5- Calificar juego");
+            Console.WriteLine("6- Detalle del juego");
+            Console.WriteLine("7- Desconectarse del servidor");
+
+        }
+
         static void Main(string[] args)
         {
 
@@ -61,72 +74,79 @@ namespace Client
 
             if(response.Equals("1"))
             {
-                conectToServer();
-
-                Console.WriteLine("Ingrese su nombre de usuario");
-                string userName = Console.ReadLine();
-
-
-                new Thread(() => ProtocolDataProgram.Listen(clientSocket)).Start();
-                Console.WriteLine("Connected to server");
-
-                ProtocolDataProgram.Send(clientSocket);
-
-                Console.WriteLine("Bienvenido a la plataforma");
-                Console.WriteLine("Menu:");
-                Console.WriteLine("1- Publicar juego");
-                Console.WriteLine("2- Eliminar juego");
-                Console.WriteLine("3- Modificar juego");
-                Console.WriteLine("4- Buscar juego");
-                Console.WriteLine("5- Calificar juego");
-                Console.WriteLine("6- Detalle del juego");
-                Console.WriteLine("7- Desconectarse del servidor");
-
-                string menuOption = Console.ReadLine();
-
-                while (menuOption!="7")
+                try
                 {
-                    switch (menuOption)
-                    {
-                        case "1":
-                            {
+                    conectToServer();
 
-                                break;
-                            }
-                        case "2":
-                            {
-                                break;
-                            }
-                        case "3":
-                            {
-                                break;
-                            }
-                        case "4":
-                            {
-                                break;
-                            }
-                        case "5":
-                            {
-                                break;
-                            }
-                        case "6":
-                            {
-                                break;
-                            }
-                        case "7":
-                            {
-                                clientSocket.Shutdown(SocketShutdown.Send);
-                                clientSocket.Close();
-                                Console.WriteLine("7- Cliente desconectado del servidor!");
-                                break;
-                            }
+                    Console.WriteLine("Ingrese su nombre de usuario");
+                    string userName = Console.ReadLine();
+
+
+                    //new Thread(() => ProtocolDataProgram.Listen(clientSocket)).Start();
+                    Console.WriteLine("Connected to server");
+
+                    //ProtocolDataProgram.Send(clientSocket);
+
+                    Console.WriteLine("Bienvenido a la plataforma");
+
+                    printMenu();
+
+                    string menuOption = Console.ReadLine();
+
+                    ClientServicesManager = new ClientServicesManager(userName);
+                    ClientServicesManager.SendUserName(clientSocket,userName);
+
+                    while (menuOption != "7")
+                    {
+                        switch (menuOption)
+                        {
+                            case "1":
+                                {
+                                    ClientServicesManager.PublishGame(clientSocket);
+                                    break;
+                                }
+                            case "2":
+                                {
+                                    ClientServicesManager.DeleteGame();
+                                    break;
+                                }
+                            case "3":
+                                {
+                                    ClientServicesManager.ModifyGame();
+                                    break;
+                                }
+                            case "4":
+                                {
+                                    ClientServicesManager.SearchGame();
+                                    break;
+                                }
+                            case "5":
+                                {
+                                    ClientServicesManager.QualifyGame();
+                                    break;
+                                }
+                            case "6":
+                                {
+                                    ClientServicesManager.GameDetails();
+                                    break;
+                                }
+                            case "7":
+                                {
+                                    clientSocket.Shutdown(SocketShutdown.Send);
+                                    clientSocket.Close();
+                                    Console.WriteLine("7- Cliente desconectado del servidor!");
+                                    break;
+                                }
+                        }
                     }
 
                 }
 
-               
+                catch (SocketException s)
+                {
+                    Console.WriteLine("Error: " + s.ErrorCode + ", Error Code: " + s.SocketErrorCode);
+                }
             }
-            
         }
     }
 }

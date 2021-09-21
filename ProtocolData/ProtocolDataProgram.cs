@@ -8,12 +8,30 @@ namespace ProtocolData
     {
         private const int ProtocolFixedSize = 4;
 
-        public static void Send(Socket socket)
+        
+
+
+        private static void HandleData(string message)
         {
-            while (true)
+            string[] data = message.Split(Environment.NewLine);
+            string actionType = data[0];
+            string cmd = data[1];
+            string[] info = data[2].Split("/-");
+
+            if (actionType == "REQ")
             {
-                //1 Leo el mensaje
-                string message = Console.ReadLine();
+                
+            }
+            else
+            {
+
+
+            }
+
+        }
+
+        public void Send(Socket socket, string message)
+        {    
                 //2 Codifico el mensaje a bytes
                 byte[] data = Encoding.UTF8.GetBytes(message);
                 //3 Leo el largo del mensaje codificado
@@ -27,15 +45,16 @@ namespace ProtocolData
 
                 //6 Envío el mensaje
                 SendBatch(socket, data);
-            }
+            
         }
 
         public static void Listen(Socket socket)
         {
 
-            while (true)
-            {
-                //1 Creo la parte fija del protocolo
+            var iBytesRecibidos = 1;
+
+            while (iBytesRecibidos > 0)
+            {   //1 Creo la parte fija del protocolo
                 byte[] dataLength = new byte[ProtocolFixedSize];
                 //2 Recibo los datos fijos
                 socket.Receive(dataLength);
@@ -47,10 +66,14 @@ namespace ProtocolData
                 socket.Receive(data);
                 //6 Convierto los datos a string
                 string message = Encoding.UTF8.GetString(data);
-                //7 Muestro los datos
-                Console.WriteLine(message);
+                //7 Uso los datos
+                HandleData(message);
+
             }
+            socket.Shutdown(SocketShutdown.Both);
+            socket.Close();
         }
+
 
         private static void SendBatch(Socket socket, byte[] data)
         {
