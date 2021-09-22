@@ -18,8 +18,13 @@ namespace Domain
         public string Synopsis { get; set; }
         public string Cover { get; set; }
 
-        public Game()
+        public Game(string title, GameGender gender,string synopsis, string cover)
         {
+            this.Title = title;
+            this.Gender = gender;
+            this.UserRatings = new List<UserRating>();
+            this.Synopsis = synopsis;
+            this.Cover = cover;
         }
     }
 }

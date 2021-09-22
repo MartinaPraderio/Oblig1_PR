@@ -4,13 +4,13 @@ using System.Text;
 
 namespace ProtocolData
 {
+    public enum action {PublishGame}
+
     public class ProtocolDataProgram
     {
         private const int ProtocolFixedSize = 4;
 
         
-
-
         private static void HandleData(string message)
         {
             string[] data = message.Split(Environment.NewLine);
@@ -28,6 +28,18 @@ namespace ProtocolData
 
             }
 
+        }
+
+        public void SendHeader(Socket socket, Header header)
+        {
+            //asi? o que manda el header
+            string messageToSend = header.action;
+            Send(socket, messageToSend);
+        }
+
+        public void SendData(Socket socket, string data)
+        {
+            Send(socket, data);
         }
 
         public void Send(Socket socket, string message)
@@ -48,10 +60,10 @@ namespace ProtocolData
             
         }
 
-        public static void Listen(Socket socket)
+        public static void Listen(Socket socket, int size)
         {
 
-            var iBytesRecibidos = 1;
+            int totalReceivedBytes = 0;
 
             while (iBytesRecibidos > 0)
             {   //1 Creo la parte fija del protocolo
@@ -74,6 +86,25 @@ namespace ProtocolData
             socket.Close();
         }
 
+        public byte[] Receive(int size)
+        {
+            int totalReceivedBytes = 0;
+            var data = new byte[size];
+            while (totalReceivedBytes < size)
+            {
+                int receivedBytes = _socket.Receive(
+                    data,
+                    totalReceivedBytes,
+                    size - totalReceivedBytes,
+                    SocketFlags.None);
+                if (receivedBytes == 0)
+                {
+                    throw new SocketException();
+                }
+                totalReceivedBytes += receivedBytes;
+            }
+            return data;
+        }
 
         private static void SendBatch(Socket socket, byte[] data)
         {
