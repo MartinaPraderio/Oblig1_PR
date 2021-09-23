@@ -28,55 +28,53 @@ namespace Client
             }
             return 0;
         }
-       
+
 
         private void SendMessage(Socket clientSocket, string message, action action)
         {
-            protocolHandleData.Send(clientSocket, action.ToString());
-            protocolHandleData.Send(clientSocket, message);
+            Console.WriteLine("accion "+action.ToString());
+            ProtocolDataProgram.Send(clientSocket, action.ToString());
+            ProtocolDataProgram.Send(clientSocket, message);
         }
 
-        
-        public void SendUserName(Socket clientSocket, string userName)
-        {
-            //userName = "[0]" + userName;
-            //llamar a otra funcion dentro de esta clase que
-            SendMessage(userName, action.SendUsername);
-            
-        }
 
-        public void PublishGame(Socket clientSocket)
+        //public void sendusername(Socket clientsocket, string username)
+        //{
+        //    //username = "[0]" + username;
+        //    //llamar a otra funcion dentro de esta clase que
+        //    Sendmessage(username, action.Sendusername);
+
+        //}
+
+        public void PublishGame(Socket clientsocket)
         {
-            Console.WriteLine("Ingrese el titulo del juego");
+            Console.WriteLine("ingrese el titulo del juego");
             string title = Console.ReadLine();
-            Console.WriteLine("Ingrese el synopsis del juego");
+            Console.WriteLine("ingrese el synopsis del juego");
             string synopsis = Console.ReadLine();
-            Console.WriteLine("Ingrese el genero del juego");
-            string gender = Console.ReadLine();
-            //Console.WriteLine("Ingrese las caratula del juego");
-            //string cover = Console.ReadLine();
             GameGender genderGame = GameGender.Accion;
-            Game game = new Game(title,genderGame,synopsis,"cover");
+            Game game = new Game(title, genderGame, synopsis, "cover");
 
             string message = JsonSerializer.Serialize(game);
-
-            SendMessage(socket, message,action.PublishGame);
-
-            string game = "REQ"+Environment.NewLine+"[1]"+Environment.NewLine + title +"/-"+ description + "/-" + synopsis + "/-" + gender;
-
-            protocolHandleData.Send(clientSocket,game);
+            Console.WriteLine(message);
+            SendMessage(clientsocket, message, action.PublishGame);
         }
 
-        
 
-        public override void QualifyGame() { }
-        public override Game SearchGame() { return new Game(); }
-        public override void GameDetails() { }
+
+        //public override void qualifygame() { }
+        //public override game searchgame() { return new game(); }
+        //public override void gamedetails() { }
 
         public void RequestServerConnection(){}
         public void EndServerConnection(){}
         public void ModifyGame(){}
         public void DeleteGame(){}
+
+        internal void SendEmptyMessage(Socket clientSocket)
+        {
+            ProtocolDataProgram.Send(clientSocket, "");
+        }
     }
 }
 

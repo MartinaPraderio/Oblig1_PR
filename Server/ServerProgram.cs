@@ -9,25 +9,25 @@ namespace Server
 {
     public class ServerProgram
     {
-        private static IConfiguration builder = new ConfigurationBuilder().AddJsonFile($"settings.json", true, true).Build();
+        //private static IConfiguration builder = new ConfigurationBuilder().AddJsonFile($"settings.json", true, true).Build();
 
-        private static string ServerIpAdress = builder["ServerIpAdress"];
+        //private static string ServerIpAdress = builder["ServerIpAdress"];
 
-        private static int ServerPort = Int32.Parse(builder["ServerPort"]);
+        //private static int ServerPort = Int32.Parse(builder["ServerPort"]);
 
-        private static int Backlog = Int32.Parse(builder["Backlog"]);
-
+        //private static int Backlog = Int32.Parse(builder["Backlog"]);
 
 
         static void Main(string[] args)
         {
-
             Socket serverSocket = new Socket(
                 AddressFamily.InterNetwork,
                 SocketType.Stream,
                 ProtocolType.Tcp
             );
-
+            string ServerIpAdress = "127.0.0.1";
+            int ServerPort = 2000;
+            int Backlog = 100;
             IPEndPoint serverIPEndPoint = new IPEndPoint(IPAddress.Parse(ServerIpAdress),ServerPort);
 
             try
@@ -41,7 +41,7 @@ namespace Server
                     Console.WriteLine("Esperando por conexiones....");
                     var handler = serverSocket.Accept();
                     new Thread(() => ProtocolDataProgram.Listen(handler)).Start();
-                    ProtocolDataProgram.Send(handler);
+                    ProtocolDataProgram.Send(handler,"hola soy cliene");
                 }
 
             }

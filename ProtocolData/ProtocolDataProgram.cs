@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Net.Sockets;
 using System.Text;
+using System.Text.Json;
+using Domain;
+using Newtonsoft.Json;
 
 namespace ProtocolData
 {
@@ -10,39 +13,14 @@ namespace ProtocolData
     {
         private const int ProtocolFixedSize = 4;
 
+        public ProtocolDataProgram() { }
         
         private static void HandleData(string message)
         {
-            string[] data = message.Split(Environment.NewLine);
-            string actionType = data[0];
-            string cmd = data[1];
-            string[] info = data[2].Split("/-");
-
-            if (actionType == "REQ")
-            {
-                
-            }
-            else
-            {
-
-
-            }
-
+            Game aGame = JsonConvert.DeserializeObject<Game>(message);
         }
 
-        public void SendHeader(Socket socket, Header header)
-        {
-            //asi? o que manda el header
-            string messageToSend = header.action;
-            Send(socket, messageToSend);
-        }
-
-        public void SendData(Socket socket, string data)
-        {
-            Send(socket, data);
-        }
-
-        public void Send(Socket socket, string message)
+        public static void Send(Socket socket, string message)
         {    
                 //2 Codifico el mensaje a bytes
                 byte[] data = Encoding.UTF8.GetBytes(message);
@@ -60,18 +38,21 @@ namespace ProtocolData
             
         }
 
-        public static void Listen(Socket socket, int size)
+        public static void Listen(Socket socket)
         {
 
-            int totalReceivedBytes = 0;
+            int iBytesRecibidos = 1;
 
             while (iBytesRecibidos > 0)
-            {   //1 Creo la parte fija del protocolo
+            {
+                Console.WriteLine("listen");
+                //1 Creo la parte fija del protocolo
                 byte[] dataLength = new byte[ProtocolFixedSize];
                 //2 Recibo los datos fijos
                 socket.Receive(dataLength);
                 //3 Interpreto dichos bytes para obtener cuanto serán los datos variables
                 int length = BitConverter.ToInt32(dataLength);
+                Console.WriteLine("largo "+length);
                 //4 Creo que el buffer del tamaño exacto de el mensaje que va a venir
                 byte[] data = new byte[length];
                 //5 Recibo el mensaje (largo variable, que ahora se que es length)
@@ -79,31 +60,12 @@ namespace ProtocolData
                 //6 Convierto los datos a string
                 string message = Encoding.UTF8.GetString(data);
                 //7 Uso los datos
-                HandleData(message);
+                //HandleData(message);
+                Console.WriteLine(message);
 
             }
             socket.Shutdown(SocketShutdown.Both);
             socket.Close();
-        }
-
-        public byte[] Receive(int size)
-        {
-            int totalReceivedBytes = 0;
-            var data = new byte[size];
-            while (totalReceivedBytes < size)
-            {
-                int receivedBytes = _socket.Receive(
-                    data,
-                    totalReceivedBytes,
-                    size - totalReceivedBytes,
-                    SocketFlags.None);
-                if (receivedBytes == 0)
-                {
-                    throw new SocketException();
-                }
-                totalReceivedBytes += receivedBytes;
-            }
-            return data;
         }
 
         private static void SendBatch(Socket socket, byte[] data)

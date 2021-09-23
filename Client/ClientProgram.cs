@@ -13,13 +13,13 @@ namespace Client
 
         private static IConfiguration builder = new ConfigurationBuilder().AddJsonFile($"settings.json",true, true).Build();
 
-        private static string ServerIpAdress = builder["ServerIpAdress"];
+        private static string ServerIpAdress = "127.0.0.1"; //builder["ServerIpAdress"];
 
-        private static int ServerPort = Int32.Parse(builder["ServerPort"]);
+        private static int ServerPort = 2000; //Int32.Parse(builder["ServerPort"]);
 
-        private static string ClientIpAdress = builder["ClientIpAdress"];
+        private static string ClientIpAdress = "127.0.0.1"; //builder["ClientIpAdress"];
 
-        private static int ClientPort = Int32.Parse(builder["ClientPort"]);
+        private static int ClientPort = 6001; //Int32.Parse(builder["ClientPort"]);
 
         private static Socket clientSocket;
 
@@ -94,7 +94,7 @@ namespace Client
                     string menuOption = Console.ReadLine();
 
                     ClientServicesManager = new ClientServicesManager(userName);
-                    ClientServicesManager.SendUserName(clientSocket,userName);
+                    //ClientServicesManager.SendUserName(clientSocket,userName);
 
                     while (menuOption != "7")
                     {
@@ -117,22 +117,23 @@ namespace Client
                                 }
                             case "4":
                                 {
-                                    ClientServicesManager.SearchGame();
+                                    //ClientServicesManager.SearchGame();
                                     break;
                                 }
                             case "5":
                                 {
-                                    ClientServicesManager.QualifyGame();
+                                    //ClientServicesManager.QualifyGame();
                                     break;
                                 }
                             case "6":
                                 {
-                                    ClientServicesManager.GameDetails();
+                                    //ClientServicesManager.GameDetails();
                                     break;
                                 }
                             case "7":
                                 {
-                                    clientSocket.Shutdown(SocketShutdown.Send);
+                                    ClientServicesManager.SendEmptyMessage(clientSocket);
+                                    clientSocket.Shutdown(SocketShutdown.Both);
                                     clientSocket.Close();
                                     Console.WriteLine("7- Cliente desconectado del servidor!");
                                     break;

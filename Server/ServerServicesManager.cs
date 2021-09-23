@@ -4,15 +4,15 @@ using Domain;
 
 namespace BusinessLogic
 {
-    public class ServerServicesManager: ServicesManager
+    public class ServerServicesManager
     {
-        public override void PublishGame(Socket clientSocket) {
+        public void PublishGame(Socket clientSocket) {
 
 
         }
-        public override void QualifyGame() { }
-        public override Game SearchGame() { return new Game(); }
-        public override void GameDetails() { }
+        public void QualifyGame() { }
+        public Game SearchGame() { return new Game("titulo",GameGender.Accion,"sino","cover"); }
+        public void GameDetails() { }
 
         public void AcceptClient(){}
         public void ViewCatalogue(){}
