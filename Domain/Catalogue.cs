@@ -5,7 +5,7 @@ namespace Domain
 {
     public class Catalogue
     {
-        private List<Game> Games { get; set; }
+        public List<Game> Games { get; set; }
 
         public Catalogue()
         {

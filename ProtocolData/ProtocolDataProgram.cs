@@ -9,7 +9,8 @@ namespace ProtocolData
 {
     public enum action {
         PublishGame,
-        NotifyUsername
+        NotifyUsername,
+        DeleteGame
     }
 
     public class ProtocolDataProgram

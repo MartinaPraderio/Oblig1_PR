@@ -34,5 +34,21 @@ namespace BusinessLogic
             Console.WriteLine(users.Count);
             return "Usuario agragado con exito";
         }
+
+        internal string DeleteGame(string message)
+        {
+            Game aGame = gameCatalogue.Games.Find(x => x.Title.Equals(message));
+            string response = "";
+            if (aGame!=null)
+            {
+                this.gameCatalogue.Games.Remove(aGame);
+                response = "El juego fue eliminado.";
+            }
+            else
+            {
+                response = "El juego que quiere eliminar no existe";
+            }
+            return response;
+        }
     }
 }

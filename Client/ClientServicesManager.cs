@@ -10,20 +10,22 @@ namespace Client
     {
         private ProtocolDataProgram protocolHandleData;
 
+        private Socket clientSocket;
         //private ServerServicesManager serverServicesManager;
 
-        public ClientServicesManager()
+        public ClientServicesManager(Socket client)
         {
-            protocolHandleData = new ProtocolDataProgram();
+            this.protocolHandleData = new ProtocolDataProgram();
+            this.clientSocket = client;
         }
 
 
-        public void SendMessage(Socket clientSocket, string message, action action)
+        public void SendMessage(string message, action action)
         {
             Console.WriteLine("mandando accion "+action.ToString());
             ProtocolDataProgram.Send(clientSocket, action.ToString());
             ProtocolDataProgram.Send(clientSocket, message);
-            ProtocolDataProgram.Send(clientSocket, "");
+            //ProtocolDataProgram.Send(clientSocket, "");
         }
 
 
@@ -35,7 +37,7 @@ namespace Client
 
         //}
 
-        public void PublishGame(Socket clientsocket)
+        public void PublishGame()
         {
             Console.WriteLine("ingrese el titulo del juego");
             string title = Console.ReadLine();
@@ -46,8 +48,8 @@ namespace Client
 
             string message = JsonSerializer.Serialize(game);
             Console.WriteLine(message);
-            SendMessage(clientsocket, message, action.PublishGame);
-            string response = ProtocolDataProgram.Listen(clientsocket);
+            SendMessage(message, action.PublishGame);
+            string response = ProtocolDataProgram.Listen(clientSocket);
             Console.WriteLine(response);
         }
 
@@ -60,11 +62,18 @@ namespace Client
         public void RequestServerConnection(){}
         public void EndServerConnection(){}
         public void ModifyGame(){}
-        public void DeleteGame(){}
+        public void DeleteGame(){
+            Console.WriteLine("ingrese el titulo del juego a eliminar");
+            string title = Console.ReadLine();
+            SendMessage(title, action.DeleteGame);
+            string response = ProtocolDataProgram.Listen(clientSocket);
+            Console.WriteLine(response);
+        }
 
         internal void SendEmptyMessage(Socket clientSocket)
         {
             ProtocolDataProgram.Send(clientSocket, "");
+
         }
     }
 }

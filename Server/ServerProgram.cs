@@ -13,13 +13,7 @@ namespace Server
 {
     public class ServerProgram
     {
-        //private static IConfiguration builder = new ConfigurationBuilder().AddJsonFile($"settings.json", true, true).Build();
 
-        //private static string ServerIpAdress = builder["ServerIpAdress"];
-
-        //private static int ServerPort = Int32.Parse(builder["ServerPort"]);
-
-        //private static int Backlog = Int32.Parse(builder["Backlog"]);
         private static ServerServicesManager serverServicesManager;
 
 
@@ -72,7 +66,14 @@ namespace Server
                             string response = serverServicesManager.AddUser(aUser);
                             ProtocolDataProgram.Send(clientSocket, response);
                             break;
-                        }       
+                        }
+                    case "DeleteGame":
+                        {
+                            //buscar juego por titulo en el catalogo
+                            string response = serverServicesManager.DeleteGame(message);
+                            ProtocolDataProgram.Send(clientSocket, response);
+                            break;
+                        }
                 }
 
             }
@@ -80,6 +81,14 @@ namespace Server
 
         static void Main(string[] args)
         {
+            //IConfiguration builder = new ConfigurationBuilder().AddJsonFile("AppSettings.json", true, true).Build();
+
+            //var ServerIpAdress = builder["Server:IP"];
+            //var ServerPort = Int32.Parse(builder["Server:Port"]);
+            //var ServerIpAdress = builder["ServerIpAdress"];
+            //var ServerPort = Int32.Parse(builder["ServerPort"]);
+            //var Backlog = Int32.Parse(builder["Server:Backlog"]);
+
             Socket serverSocket = new Socket(
                 AddressFamily.InterNetwork,
                 SocketType.Stream,
