@@ -49,6 +49,8 @@ namespace Client
             string message = JsonSerializer.Serialize(game);
             Console.WriteLine(message);
             SendMessage(clientsocket, message, action.PublishGame);
+            string response = ProtocolDataProgram.Listen(clientsocket);
+            Console.WriteLine(response);
         }
 
 

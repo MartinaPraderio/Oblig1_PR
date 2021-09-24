@@ -7,12 +7,15 @@ namespace BusinessLogic
 {
     public class ServerServicesManager
     {
+        private Catalogue gameCatalogue;
+        public ServerServicesManager()
+        {
+            this.gameCatalogue = new Catalogue();
+        }
 
-        public void PublishGame(Socket clientSocket, string message) {
-
-            //pasar de string a juego
-            //agregar el juego a la lista
-            //si ya existe mandar mensaje ya existe, sino mandar juego agregado
+        public string PublishGame(Game newGame) {
+            this.gameCatalogue.AddGame(newGame);
+            return "Juego agegado con exito";
         }
         public void QualifyGame() { }
         public Game SearchGame() { return new Game("titulo",GameGender.Accion,"sino","cover"); }

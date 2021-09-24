@@ -5,10 +5,16 @@ namespace Domain
 {
     public class Catalogue
     {
-        List<Game> Games { get; set; }
+        private List<Game> Games { get; set; }
 
         public Catalogue()
         {
+            this.Games = new List<Game>();
+        }
+
+        public void AddGame(Game aGame)
+        {
+            this.Games.Add(aGame);
         }
     }
 }

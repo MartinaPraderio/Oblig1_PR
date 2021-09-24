@@ -5,6 +5,9 @@ using System.Threading;
 using BusinessLogic;
 using Microsoft.Extensions.Configuration;
 using ProtocolData;
+using System.Text.Json;
+using Domain;
+using Newtonsoft.Json;
 
 namespace Server
 {
@@ -22,7 +25,7 @@ namespace Server
 
         private const int headerLength = 2;
         private const int dataLength = 4;
-        private  bool exit = false;
+        private static bool exit = false;
 
         /*private static void ListenForConnections(Socket socketServer)
         {
@@ -44,18 +47,22 @@ namespace Server
             Console.WriteLine("Exiting....");
         }*/
 
-        private void HandleClient(Socket clientSocket)
+        private static void HandleClient(Socket clientSocket)
         {
+            
+
             while (!exit)
             {
 
-                string command = ProtocolDataProgram.Listen(clientSocket, headerLength);
-                string message = ProtocolDataProgram.Listen(clientSocket, dataLength);
+                string command = ProtocolDataProgram.Listen(clientSocket);
+                string message = ProtocolDataProgram.Listen(clientSocket);
                 switch (command) 
                 {
                     case "PublishGame":
                         {
-                            ServerServicesManager.PublishGame(clientSocket, message);
+                            Game aGame = JsonConvert.DeserializeObject<Game>(message);
+                            string response = ServerServicesManager.PublishGame(aGame);
+                            ProtocolDataProgram.Send(clientSocket,response);
                             break;
                         }
                         
@@ -74,6 +81,8 @@ namespace Server
             string ServerIpAdress = "127.0.0.1";
             int ServerPort = 2000;
             int Backlog = 100;
+            Catalogue gameCatalogue = new Catalogue();
+
             IPEndPoint serverIPEndPoint = new IPEndPoint(IPAddress.Parse(ServerIpAdress),ServerPort);
 
             try
@@ -86,8 +95,8 @@ namespace Server
                 {
                     Console.WriteLine("Esperando por conexiones....");
                     var handler = serverSocket.Accept();
-                    new Thread(() => HandleClient(handler)); 
-                   // new Thread(() => ProtocolDataProgram.Listen(handler)).Start();
+                    new Thread(() => HandleClient(handler)).Start(); 
+                    //new Thread(() => ProtocolDataProgram.Listen(handler)).Start();
                     ProtocolDataProgram.Send(handler,"hola soy cliene");
                 }
 

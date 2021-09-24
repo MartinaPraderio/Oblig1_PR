@@ -13,7 +13,8 @@ namespace ProtocolData
     {
 
         public ProtocolDataProgram() { }
-        
+        private const int ProtocolFixedSize = 4;
+
         private static void HandleData(string message)
         {
             Game aGame = JsonConvert.DeserializeObject<Game>(message);
@@ -37,9 +38,8 @@ namespace ProtocolData
             
         }
 
-        public static string Listen(Socket socket, int size)
+        public static string Listen(Socket socket)
         {
-
             int iBytesRecibidos = 1;
             string dataString = "";
 
@@ -47,7 +47,7 @@ namespace ProtocolData
             {
                 Console.WriteLine("listen");
                 //1 Creo la parte fija del protocolo
-                byte[] dataLength = new byte[size];
+                byte[] dataLength = new byte[ProtocolFixedSize];
                 //2 Recibo los datos fijos
                 socket.Receive(dataLength);
                 //3 Interpreto dichos bytes para obtener cuanto serán los datos variables
