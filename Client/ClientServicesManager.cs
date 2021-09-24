@@ -20,15 +20,6 @@ namespace Client
             protocolHandleData = new ProtocolDataProgram();
         }
 
-        private int ActionToInt(action theAction)
-        {
-            if (theAction.Equals(action.PublishGame))
-            {
-                return 1;
-            }
-            return 0;
-        }
-
 
         private void SendMessage(Socket clientSocket, string message, action action)
         {

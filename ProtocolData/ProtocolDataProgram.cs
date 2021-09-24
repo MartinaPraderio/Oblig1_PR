@@ -11,7 +11,6 @@ namespace ProtocolData
 
     public class ProtocolDataProgram
     {
-        private const int ProtocolFixedSize = 4;
 
         public ProtocolDataProgram() { }
         
@@ -38,16 +37,17 @@ namespace ProtocolData
             
         }
 
-        public static void Listen(Socket socket)
+        public static string Listen(Socket socket, int size)
         {
 
             int iBytesRecibidos = 1;
+            string dataString = "";
 
             while (iBytesRecibidos > 0)
             {
                 Console.WriteLine("listen");
                 //1 Creo la parte fija del protocolo
-                byte[] dataLength = new byte[ProtocolFixedSize];
+                byte[] dataLength = new byte[size];
                 //2 Recibo los datos fijos
                 socket.Receive(dataLength);
                 //3 Interpreto dichos bytes para obtener cuanto serán los datos variables
@@ -61,11 +61,11 @@ namespace ProtocolData
                 string message = Encoding.UTF8.GetString(data);
                 //7 Uso los datos
                 //HandleData(message);
-                Console.WriteLine(message);
+                dataString= message;
+               // Console.WriteLine(message);
 
             }
-            socket.Shutdown(SocketShutdown.Both);
-            socket.Close();
+            return dataString;
         }
 
         private static void SendBatch(Socket socket, byte[] data)

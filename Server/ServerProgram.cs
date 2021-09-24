@@ -2,6 +2,7 @@
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
+using BusinessLogic;
 using Microsoft.Extensions.Configuration;
 using ProtocolData;
 
@@ -16,7 +17,52 @@ namespace Server
         //private static int ServerPort = Int32.Parse(builder["ServerPort"]);
 
         //private static int Backlog = Int32.Parse(builder["Backlog"]);
+        private static ServerServicesManager ServerServicesManager;
 
+
+        private const int headerLength = 2;
+        private const int dataLength = 4;
+        private  bool exit = false;
+
+        /*private static void ListenForConnections(Socket socketServer)
+        {
+            while (!_exit)
+            {
+                try
+                {
+                    var clientConnected = socketServer.Accept();
+                    _clients.Add(clientConnected);
+                    var threacClient = new Thread(() => HandleClient(clientConnected));
+                    threacClient.Start();
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                    _exit = true;
+                }
+            }
+            Console.WriteLine("Exiting....");
+        }*/
+
+        private void HandleClient(Socket clientSocket)
+        {
+            while (!exit)
+            {
+
+                string command = ProtocolDataProgram.Listen(clientSocket, headerLength);
+                string message = ProtocolDataProgram.Listen(clientSocket, dataLength);
+                switch (command) 
+                {
+                    case "PublishGame":
+                        {
+                            ServerServicesManager.PublishGame(clientSocket, message);
+                            break;
+                        }
+                        
+                }
+
+            }
+        }
 
         static void Main(string[] args)
         {
@@ -40,7 +86,8 @@ namespace Server
                 {
                     Console.WriteLine("Esperando por conexiones....");
                     var handler = serverSocket.Accept();
-                    new Thread(() => ProtocolDataProgram.Listen(handler)).Start();
+                    new Thread(() => HandleClient(handler)); 
+                   // new Thread(() => ProtocolDataProgram.Listen(handler)).Start();
                     ProtocolDataProgram.Send(handler,"hola soy cliene");
                 }
 
