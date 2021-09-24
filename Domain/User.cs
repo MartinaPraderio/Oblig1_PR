@@ -8,8 +8,9 @@ namespace Domain
         public List<Game> Games { get; set; }
         public string UserName { get; set; }
 
-        public User()
+        public User(string username)
         {
+            this.UserName = username;
         }
     }
 }

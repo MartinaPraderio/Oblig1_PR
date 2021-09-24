@@ -20,7 +20,7 @@ namespace Server
         //private static int ServerPort = Int32.Parse(builder["ServerPort"]);
 
         //private static int Backlog = Int32.Parse(builder["Backlog"]);
-        private static ServerServicesManager ServerServicesManager;
+        private static ServerServicesManager serverServicesManager;
 
 
         private const int headerLength = 2;
@@ -55,17 +55,24 @@ namespace Server
             {
 
                 string command = ProtocolDataProgram.Listen(clientSocket);
+                Console.WriteLine("Comando: "+command);
                 string message = ProtocolDataProgram.Listen(clientSocket);
                 switch (command) 
                 {
                     case "PublishGame":
                         {
                             Game aGame = JsonConvert.DeserializeObject<Game>(message);
-                            string response = ServerServicesManager.PublishGame(aGame);
+                            string response = serverServicesManager.PublishGame(aGame);
                             ProtocolDataProgram.Send(clientSocket,response);
                             break;
                         }
-                        
+                    case "NotifyUsername":
+                        {
+                            User aUser = new User(message);
+                            string response = serverServicesManager.AddUser(aUser);
+                            ProtocolDataProgram.Send(clientSocket, response);
+                            break;
+                        }       
                 }
 
             }
@@ -81,7 +88,7 @@ namespace Server
             string ServerIpAdress = "127.0.0.1";
             int ServerPort = 2000;
             int Backlog = 100;
-            Catalogue gameCatalogue = new Catalogue();
+            serverServicesManager = new ServerServicesManager();
 
             IPEndPoint serverIPEndPoint = new IPEndPoint(IPAddress.Parse(ServerIpAdress),ServerPort);
 
@@ -97,7 +104,6 @@ namespace Server
                     var handler = serverSocket.Accept();
                     new Thread(() => HandleClient(handler)).Start(); 
                     //new Thread(() => ProtocolDataProgram.Listen(handler)).Start();
-                    ProtocolDataProgram.Send(handler,"hola soy cliene");
                 }
 
             }

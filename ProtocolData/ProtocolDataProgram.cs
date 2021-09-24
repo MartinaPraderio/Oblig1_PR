@@ -7,7 +7,10 @@ using Newtonsoft.Json;
 
 namespace ProtocolData
 {
-    public enum action {PublishGame}
+    public enum action {
+        PublishGame,
+        NotifyUsername
+    }
 
     public class ProtocolDataProgram
     {
@@ -43,16 +46,14 @@ namespace ProtocolData
             int iBytesRecibidos = 1;
             string dataString = "";
 
-            while (iBytesRecibidos > 0)
-            {
-                Console.WriteLine("listen");
+            //while (iBytesRecibidos > 0)
+            //{
                 //1 Creo la parte fija del protocolo
                 byte[] dataLength = new byte[ProtocolFixedSize];
                 //2 Recibo los datos fijos
                 socket.Receive(dataLength);
                 //3 Interpreto dichos bytes para obtener cuanto serán los datos variables
                 int length = BitConverter.ToInt32(dataLength);
-                Console.WriteLine("largo "+length);
                 //4 Creo que el buffer del tamaño exacto de el mensaje que va a venir
                 byte[] data = new byte[length];
                 //5 Recibo el mensaje (largo variable, que ahora se que es length)
@@ -61,10 +62,8 @@ namespace ProtocolData
                 string message = Encoding.UTF8.GetString(data);
                 //7 Uso los datos
                 //HandleData(message);
-                dataString= message;
-               // Console.WriteLine(message);
-
-            }
+                dataString = message;
+            //}
             return dataString;
         }
 

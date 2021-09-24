@@ -12,20 +12,18 @@ namespace Client
 
         //private ServerServicesManager serverServicesManager;
 
-        private string userName;
-
-        public ClientServicesManager(string aUserName)
+        public ClientServicesManager()
         {
-            userName = aUserName;
             protocolHandleData = new ProtocolDataProgram();
         }
 
 
-        private void SendMessage(Socket clientSocket, string message, action action)
+        public void SendMessage(Socket clientSocket, string message, action action)
         {
-            Console.WriteLine("accion "+action.ToString());
+            Console.WriteLine("mandando accion "+action.ToString());
             ProtocolDataProgram.Send(clientSocket, action.ToString());
             ProtocolDataProgram.Send(clientSocket, message);
+            ProtocolDataProgram.Send(clientSocket, "");
         }
 
 

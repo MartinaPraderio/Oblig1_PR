@@ -27,7 +27,7 @@ namespace Client
 
         private static IPEndPoint serverIPEndPoint;
 
-        private static ClientServicesManager ClientServicesManager;
+        private static ClientServicesManager clientServicesManager;
 
         public static void conectToServer()
         {
@@ -65,7 +65,7 @@ namespace Client
 
         static void Main(string[] args)
         {
-
+            clientServicesManager = new ClientServicesManager();
             Console.WriteLine("¿Desea conectarse al servidor?");
             Console.WriteLine("Si (Digite 1)");
             Console.WriteLine("No (Digite 2)");
@@ -80,7 +80,7 @@ namespace Client
 
                     Console.WriteLine("Ingrese su nombre de usuario");
                     string userName = Console.ReadLine();
-
+                    clientServicesManager.SendMessage(clientSocket, userName,action.NotifyUsername);
 
                     //new Thread(() => ProtocolDataProgram.Listen(clientSocket)).Start();
                     Console.WriteLine("Connected to server");
@@ -88,31 +88,30 @@ namespace Client
                     //ProtocolDataProgram.Send(clientSocket);
 
                     Console.WriteLine("Bienvenido a la plataforma");
-
-                    printMenu();
-
-                    string menuOption = Console.ReadLine();
-
-                    ClientServicesManager = new ClientServicesManager(userName);
+                    string menuOption="";
                     //ClientServicesManager.SendUserName(clientSocket,userName);
 
                     while (menuOption != "7")
                     {
+                        printMenu();
+
+                        menuOption = Console.ReadLine();
+
                         switch (menuOption)
                         {
                             case "1":
                                 {
-                                    ClientServicesManager.PublishGame(clientSocket);
+                                    clientServicesManager.PublishGame(clientSocket);
                                     break;
                                 }
                             case "2":
                                 {
-                                    ClientServicesManager.DeleteGame();
+                                    clientServicesManager.DeleteGame();
                                     break;
                                 }
                             case "3":
                                 {
-                                    ClientServicesManager.ModifyGame();
+                                    clientServicesManager.ModifyGame();
                                     break;
                                 }
                             case "4":
@@ -132,7 +131,7 @@ namespace Client
                                 }
                             case "7":
                                 {
-                                    ClientServicesManager.SendEmptyMessage(clientSocket);
+                                    clientServicesManager.SendEmptyMessage(clientSocket);
                                     clientSocket.Shutdown(SocketShutdown.Both);
                                     clientSocket.Close();
                                     Console.WriteLine("7- Cliente desconectado del servidor!");
