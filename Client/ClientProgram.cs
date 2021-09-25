@@ -126,7 +126,7 @@ namespace Client
                                 }
                             case "5":
                                 {
-                                    //ClientServicesManager.QualifyGame();
+                                    clientServicesManager.QualifyGame();
                                     break;
                                 }
                             case "6":

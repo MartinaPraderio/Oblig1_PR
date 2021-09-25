@@ -122,6 +122,46 @@ namespace Client
             Console.WriteLine(response);
         }
 
+        internal void QualifyGame()
+        {
+            Console.WriteLine("Ingrese el titulo del juego a calificar: ");
+            string gameTitleToQualify = Console.ReadLine();
+
+            Console.WriteLine("Ingrese calificacion: ");
+            Console.WriteLine("Muy Malo: (ingrese 1)");
+            Console.WriteLine("Malo: (ingrese 2)");
+            Console.WriteLine("Medio: (ingrese 3)");
+            Console.WriteLine("Bueno: (ingrese 4)");
+            Console.WriteLine("Muy Bueno: (ingrese 5)");
+            string searchQuery = Console.ReadLine();
+            GameCalification calification = GameCalification.PorDefecto;
+            switch (searchQuery)
+            {
+                case "1":
+                    calification = GameCalification.Muy_Malo;
+                    break;
+                case "2":
+                    calification = GameCalification.Malo;
+                    break;
+                case "3":
+                    calification = GameCalification.Medio;
+                    break;
+                case "4":
+                    calification = GameCalification.Bueno;
+                    break;
+                case "5":
+                    calification = GameCalification.Muy_Bueno;
+                    break;
+            }
+            Console.WriteLine("Ingrese comentario: ");
+            string review = Console.ReadLine();
+
+
+
+            string message = gameTitleToQualify + Environment.NewLine + calification.ToString() + Environment.NewLine + review;
+            SendMessage(message, action.QualifyGame);
+        }
+
         public void SearchGame()
         {
             Console.WriteLine("Busqueda por: ");

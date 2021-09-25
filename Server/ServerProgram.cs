@@ -97,6 +97,12 @@ namespace Server
                             ProtocolDataProgram.Send(clientSocket, response);
                             break;
                         }
+                    case "QualifyGame":
+                        {
+                            string response = serverServicesManager.QualifyGame(message);
+                            ProtocolDataProgram.Send(clientSocket, response);
+                            break;
+                        }
                 }
 
             }
