@@ -124,7 +124,7 @@ namespace Client
             Console.WriteLine(response);
         }
 
-        internal void QualifyGame()
+        public void QualifyGame()
         {
             Console.WriteLine("Ingrese el titulo del juego a calificar: ");
             string gameTitleToQualify = Console.ReadLine();
@@ -168,6 +168,48 @@ namespace Client
 
             string response = ProtocolDataProgram.Listen(clientSocket);
             Console.WriteLine(response);
+        }
+
+        public void GameDetails()
+        {
+            Console.WriteLine("Ingrese el titulo del juego para ver los detalles");
+            string title = Console.ReadLine();
+            SendMessage(title, action.GameDetails);
+            string response = ProtocolDataProgram.Listen(clientSocket);
+            string[] info = response.Split(Environment.NewLine);
+            if (info[0].Equals("N"))
+            {
+                Console.WriteLine(info[1]);
+            }
+            else
+            {
+
+                Game aGame = JsonConvert.DeserializeObject<Game>(info[1]);
+                Console.WriteLine("Los detalles del juego buscado son:");
+                Console.WriteLine("Titulo: "+ aGame.Title);
+                Console.WriteLine("Sinopsis: " + aGame.Synopsis);
+                Console.WriteLine("Categoría: " + aGame.Gender);
+                GameCalification calification = GameCalification.PorDefecto;
+                switch (Math.Truncate(aGame.RatingAverage)){
+                    case 1:
+                        calification = GameCalification.Muy_Malo;
+                        break;
+                    case 2:
+                        calification = GameCalification.Malo;
+                        break;
+                    case 3:
+                        calification = GameCalification.Medio;
+                        break;
+                    case 4:
+                        calification = GameCalification.Bueno;
+                        break;
+                    case 5:
+                        calification = GameCalification.Muy_Bueno;
+                        break;
+                }
+                Console.WriteLine("Calificacion media: " + calification.ToString());
+                Console.WriteLine("---------------------------");
+            }
         }
 
         public void SearchGame()

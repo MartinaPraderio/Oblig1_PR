@@ -131,7 +131,7 @@ namespace Client
                                 }
                             case "6":
                                 {
-                                    //ClientServicesManager.GameDetails();
+                                    clientServicesManager.GameDetails();
                                     break;
                                 }
                             case "7":

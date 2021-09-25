@@ -16,7 +16,8 @@ namespace ProtocolData
         SearchGameByTitle,
         SearchGameByGender,
         SearchGameByRating,
-        QualifyGame
+        QualifyGame,
+        GameDetails
     }
 
     public class ProtocolDataProgram
