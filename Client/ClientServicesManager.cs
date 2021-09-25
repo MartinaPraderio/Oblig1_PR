@@ -13,12 +13,14 @@ namespace Client
         private ProtocolDataProgram protocolHandleData;
 
         private Socket clientSocket;
-        //private ServerServicesManager serverServicesManager;
 
-        public ClientServicesManager(Socket client)
+        private string userName;
+
+        public ClientServicesManager(Socket client, string userName)
         {
             this.protocolHandleData = new ProtocolDataProgram();
             this.clientSocket = client;
+            this.userName = userName;
         }
 
 
@@ -157,9 +159,15 @@ namespace Client
             string review = Console.ReadLine();
 
 
-
-            string message = gameTitleToQualify + Environment.NewLine + calification.ToString() + Environment.NewLine + review;
+            // Le mando el username al server en el message, pero de forma provisoria. Me parece mejor hacer q sea
+            // parte del protocolo, osea que el client para cualquier accion q quiera hacer se identifique mandando
+            // su username. Despues, del lado del server a veces es necesario ver que user nos mando la request y a
+            // veces no. X ej en este caso lo necesitamos para saber de q user es la rating
+            string message = gameTitleToQualify + Environment.NewLine + calification.ToString() + Environment.NewLine + review + Environment.NewLine + userName ;
             SendMessage(message, action.QualifyGame);
+
+            string response = ProtocolDataProgram.Listen(clientSocket);
+            Console.WriteLine(response);
         }
 
         public void SearchGame()
@@ -247,7 +255,7 @@ namespace Client
                 
                 List<Game> games = JsonConvert.DeserializeObject<List<Game>>(info[1]);
                 Console.WriteLine("Los siguientes juegos cumplen con su busqueda");
-                int count = 0;
+                int count = 1;
                 foreach (Game game in games)
                 {
                     Console.WriteLine("Juego "+ count + ":");

@@ -130,10 +130,13 @@ namespace BusinessLogic
         {
             string[] info = message.Split(Environment.NewLine);
             string gameTitle = info[0];
-            string calification = info[1];
+            GameCalification calification = (GameCalification)Enum.Parse(typeof(GameCalification), info[1]);
             string review = info[2];
-            Game gameTitle = //buscar juego
-            string addRatingResponse = gameToQualify.AddRating(actualUser, calification, review);
+            User actualUser = this.users.Find(x => x.UserName.Equals(info[3])); // esto despues hay q sacarlo, deberia ser parte del protocolo.
+            Game gameToQualify = gameCatalogue.Games.Find(x => x.Title.Equals(gameTitle));
+            UserRating newRating = new UserRating(review,calification,actualUser);
+            gameToQualify.AddRating(newRating);
+            string addRatingResponse = "Su review fue publicada con exito.";
             return addRatingResponse;
         }
     }

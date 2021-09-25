@@ -70,7 +70,6 @@ namespace Client
         static void Main(string[] args)
         {
             InitSocket();
-            clientServicesManager = new ClientServicesManager(clientSocket);
             Console.WriteLine("¿Desea conectarse al servidor?");
             Console.WriteLine("Si (Digite 1)");
             Console.WriteLine("No (Digite 2)");
@@ -84,6 +83,7 @@ namespace Client
                     conectToServer();
                     Console.WriteLine("Ingrese su nombre de usuario");
                     string userName = Console.ReadLine();
+                    clientServicesManager = new ClientServicesManager(clientSocket, userName);
                     clientServicesManager.SendMessage(userName,action.NotifyUsername);
                     string userCreatedResponse = ProtocolDataProgram.Listen(clientSocket);
                     Console.WriteLine(userCreatedResponse);

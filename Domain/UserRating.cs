@@ -16,8 +16,11 @@
         public GameCalification Calification { get; set; }
         public User User { get; set; }
 
-        public UserRating()
+        public UserRating(string review, GameCalification calification, User reviewer)
         {
+            this.Review = review;
+            this.Calification = calification;
+            this.User = reviewer;
         }
     }
 }
