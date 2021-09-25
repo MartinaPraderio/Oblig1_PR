@@ -69,8 +69,31 @@ namespace Server
                         }
                     case "DeleteGame":
                         {
-                            //buscar juego por titulo en el catalogo
                             string response = serverServicesManager.DeleteGame(message);
+                            ProtocolDataProgram.Send(clientSocket, response);
+                            break;
+                        }
+                    case "ModifyGame":
+                        {
+                            string response = serverServicesManager.ModifyGame(message);
+                            ProtocolDataProgram.Send(clientSocket, response);
+                            break;
+                        }
+                    case "SearchGameByTitle":
+                        {
+                            string response = serverServicesManager.SearchGameByTitle(message);
+                            ProtocolDataProgram.Send(clientSocket, response);
+                            break;
+                        }
+                    case "SearchGameByGender":
+                        {
+                            string response = serverServicesManager.SearchGameByGender(message);
+                            ProtocolDataProgram.Send(clientSocket, response);
+                            break;
+                        }
+                    case "SearchGameByRating":
+                        {
+                            string response = serverServicesManager.SearchGameByRating(message);
                             ProtocolDataProgram.Send(clientSocket, response);
                             break;
                         }
@@ -88,7 +111,6 @@ namespace Server
             //var ServerIpAdress = builder["ServerIpAdress"];
             //var ServerPort = Int32.Parse(builder["ServerPort"]);
             //var Backlog = Int32.Parse(builder["Server:Backlog"]);
-
             Socket serverSocket = new Socket(
                 AddressFamily.InterNetwork,
                 SocketType.Stream,

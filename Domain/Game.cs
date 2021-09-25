@@ -5,9 +5,11 @@ namespace Domain
 {
     public enum GameGender
     {
+        PorDefecto,
         Aventura,
         Accion,
-        Estrategia
+        Estrategia,
+        Infantil
     }
 
     public class Game
@@ -18,6 +20,8 @@ namespace Domain
         public string Synopsis { get; set; }
         public string Cover { get; set; }
 
+        public float RatingAverage { get; set; }
+
         public Game(string title, GameGender gender,string synopsis, string cover)
         {
             this.Title = title;
@@ -25,6 +29,41 @@ namespace Domain
             this.UserRatings = new List<UserRating>();
             this.Synopsis = synopsis;
             this.Cover = cover;
+        }
+
+        public void AddRating(UserRating rating)
+        {
+            this.UserRatings.Add(rating);
+            int totalRating = 0;
+            foreach (UserRating aRating in this.UserRatings)
+            {
+                totalRating += CalificationToInt(aRating.Calification);
+            }
+            this.RatingAverage = totalRating / this.UserRatings.Count;
+        }
+
+        public int CalificationToInt(GameCalification calification)
+        {
+            int result = 0;
+            switch (calification.ToString())
+            {
+                case "Muy_Malo":
+                    result = 1;
+                    break;
+                case "Malo":
+                    result = 2;
+                    break;
+                case "Medio":
+                    result = 3;
+                    break;
+                case "Bueno":
+                    result = 4;
+                    break;
+                case "Muy_Bueno":
+                    result = 5;
+                    break;
+            }
+            return result;
         }
     }
 }

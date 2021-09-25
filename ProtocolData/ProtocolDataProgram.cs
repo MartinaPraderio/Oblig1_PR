@@ -8,9 +8,15 @@ using Newtonsoft.Json;
 namespace ProtocolData
 {
     public enum action {
+        Default,
         PublishGame,
         NotifyUsername,
-        DeleteGame
+        DeleteGame,
+        ModifyGame,
+        SearchGameByTitle,
+        SearchGameByGender,
+        SearchGameByRating,
+        QualifyGame
     }
 
     public class ProtocolDataProgram
@@ -18,11 +24,6 @@ namespace ProtocolData
 
         public ProtocolDataProgram() { }
         private const int ProtocolFixedSize = 4;
-
-        private static void HandleData(string message)
-        {
-            Game aGame = JsonConvert.DeserializeObject<Game>(message);
-        }
 
         public static void Send(Socket socket, string message)
         {    
@@ -44,7 +45,6 @@ namespace ProtocolData
 
         public static string Listen(Socket socket)
         {
-            int iBytesRecibidos = 1;
             string dataString = "";
 
             //while (iBytesRecibidos > 0)

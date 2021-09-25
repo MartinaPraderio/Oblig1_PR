@@ -79,11 +79,9 @@ namespace Client
 
             if(response.Equals("1"))
             {
-                Console.ReadLine();
                 try
                 {
                     conectToServer();
-
                     Console.WriteLine("Ingrese su nombre de usuario");
                     string userName = Console.ReadLine();
                     clientServicesManager.SendMessage(userName,action.NotifyUsername);
@@ -123,7 +121,7 @@ namespace Client
                                 }
                             case "4":
                                 {
-                                    //ClientServicesManager.SearchGame();
+                                    clientServicesManager.SearchGame();
                                     break;
                                 }
                             case "5":
@@ -138,7 +136,7 @@ namespace Client
                                 }
                             case "7":
                                 {
-                                    clientServicesManager.SendEmptyMessage(clientSocket);
+                                    clientServicesManager.SendEmptyMessage();
                                     clientSocket.Shutdown(SocketShutdown.Both);
                                     clientSocket.Close();
                                     Console.WriteLine("7- Cliente desconectado del servidor!");

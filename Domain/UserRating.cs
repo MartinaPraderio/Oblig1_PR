@@ -2,6 +2,7 @@
 {
 
     public enum GameCalification{
+        PorDefecto,
         Muy_Malo,
         Malo,
         Medio,
