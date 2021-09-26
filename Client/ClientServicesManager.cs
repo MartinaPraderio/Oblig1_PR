@@ -170,6 +170,11 @@ namespace Client
             Console.WriteLine(response);
         }
 
+        internal void EndConnection()
+        {
+            SendMessage("", action.EndConnection);
+        }
+
         internal void DownloadGameCover()
         {
             throw new NotImplementedException();

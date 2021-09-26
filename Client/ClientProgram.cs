@@ -31,7 +31,6 @@ namespace Client
 
         public static void conectToServer()
         {
-
             clientEndPoint = new IPEndPoint(IPAddress.Parse(ClientIpAdress), ClientPort);
 
             clientSocket.Bind(clientEndPoint);
@@ -41,6 +40,7 @@ namespace Client
             serverIPEndPoint = new IPEndPoint(IPAddress.Parse(ServerIpAdress), ServerPort);
 
             clientSocket.Connect(serverIPEndPoint);
+
             Console.WriteLine("Cliente conectado al servidor!");
 
         }
@@ -96,59 +96,60 @@ namespace Client
                     Console.WriteLine("Bienvenido a la plataforma");
                     string menuOption="";
                     //ClientServicesManager.SendUserName(clientSocket,userName);
-
-                    while (menuOption != "7")
+                    
+                    while (menuOption != "8")
                     {
-                        printMenu();
 
-                        menuOption = Console.ReadLine();
+                            printMenu();
 
-                        switch (menuOption)
-                        {
-                            case "1":
-                                {
-                                    clientServicesManager.PublishGame();
-                                    break;
-                                }
-                            case "2":
-                                {
-                                    clientServicesManager.DeleteGame();
-                                    break;
-                                }
-                            case "3":
-                                {
-                                    clientServicesManager.ModifyGame();
-                                    break;
-                                }
-                            case "4":
-                                {
-                                    clientServicesManager.SearchGame();
-                                    break;
-                                }
-                            case "5":
-                                {
-                                    clientServicesManager.QualifyGame();
-                                    break;
-                                }
-                            case "6":
-                                {
-                                    clientServicesManager.GameDetails();
-                                    break;
-                                }
-                            case "7":
-                                {
-                                    clientServicesManager.DownloadGameCover();
-                                    break;
-                                }
-                            case "8":
-                                {
-                                    clientServicesManager.SendEmptyMessage();
-                                    clientSocket.Shutdown(SocketShutdown.Both);
-                                    clientSocket.Close();
-                                    Console.WriteLine("Cliente desconectado del servidor!");
-                                    break;
-                                }
-                        }
+                            menuOption = Console.ReadLine();
+
+                            switch (menuOption)
+                            {
+                                case "1":
+                                    {
+                                        clientServicesManager.PublishGame();
+                                        break;
+                                    }
+                                case "2":
+                                    {
+                                        clientServicesManager.DeleteGame();
+                                        break;
+                                    }
+                                case "3":
+                                    {
+                                        clientServicesManager.ModifyGame();
+                                        break;
+                                    }
+                                case "4":
+                                    {
+                                        clientServicesManager.SearchGame();
+                                        break;
+                                    }
+                                case "5":
+                                    {
+                                        clientServicesManager.QualifyGame();
+                                        break;
+                                    }
+                                case "6":
+                                    {
+                                        clientServicesManager.GameDetails();
+                                        break;
+                                    }
+                                case "7":
+                                    {
+                                        clientServicesManager.DownloadGameCover();
+                                        break;
+                                    }
+                                case "8":
+                                    {
+                                        clientServicesManager.EndConnection();
+                                        clientSocket.Shutdown(SocketShutdown.Both);
+                                        clientSocket.Close();
+                                        Console.WriteLine("Cliente desconectado del servidor!");
+                                        break;
+                                    }
+                            }
                     }
 
                 }

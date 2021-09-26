@@ -19,8 +19,6 @@ namespace Server
 
         private const int headerLength = 2;
         private const int dataLength = 4;
-        private static bool exit = false;
-
         /*private static void ListenForConnections(Socket socketServer)
         {
             while (!_exit)
@@ -43,6 +41,7 @@ namespace Server
 
         private static void HandleClient(Socket clientSocket)
         {
+            bool exit = false;
             while (!exit)
             {
                 string command = ProtocolDataProgram.Listen(clientSocket);
@@ -106,6 +105,11 @@ namespace Server
                             ProtocolDataProgram.Send(clientSocket, response);
                             break;
                         }
+                    case "EndConnection":
+                        {
+                            exit = true;
+                            break;
+                        }
                 }
 
             }
@@ -120,6 +124,7 @@ namespace Server
             //var ServerIpAdress = builder["ServerIpAdress"];
             //var ServerPort = Int32.Parse(builder["ServerPort"]);
             //var Backlog = Int32.Parse(builder["Server:Backlog"]);
+            //Console.WriteLine("Soy server");
             Socket serverSocket = new Socket(
                 AddressFamily.InterNetwork,
                 SocketType.Stream,
@@ -204,8 +209,8 @@ namespace Server
         {
             Console.WriteLine("Esperando por conexiones....");
             var handler = serverSocket.Accept();
-            new Thread(() => HandleClient(handler)).Start();
             Console.WriteLine("Cliente conectado!");
+            new Thread(() => HandleClient(handler)).Start();
             clientCounter++;
             return clientCounter;
         }
