@@ -103,6 +103,12 @@ namespace Server
                             ProtocolDataProgram.Send(clientSocket, response);
                             break;
                         }
+                    case "GameDetails":
+                        {
+                            string response = serverServicesManager.GameDetails(message);
+                            ProtocolDataProgram.Send(clientSocket, response);
+                            break;
+                        }
                 }
 
             }

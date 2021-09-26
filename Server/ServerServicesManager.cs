@@ -24,7 +24,19 @@ namespace BusinessLogic
         }
         public void QualifyGame() { }
         public Game SearchGame() { return new Game("titulo",GameGender.Accion,"sino","cover"); }
-        public void GameDetails() { }
+        public string GameDetails(string message) {
+            Game game = gameCatalogue.Games.Find(x => x.Title.Equals(message));
+            string response = "";
+            if (game != null)
+            {
+                response = "E" + Environment.NewLine + System.Text.Json.JsonSerializer.Serialize(game);
+            }
+            else
+            {
+                response = "N" + Environment.NewLine + "El juego que busca no existe";
+            }
+            return response;
+        }
 
         public void AcceptClient(){}
         public void ViewCatalogue(){}
