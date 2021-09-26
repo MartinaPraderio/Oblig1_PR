@@ -170,6 +170,11 @@ namespace Client
             Console.WriteLine(response);
         }
 
+        internal void DownloadGameCover()
+        {
+            throw new NotImplementedException();
+        }
+
         public void GameDetails()
         {
             Console.WriteLine("Ingrese el titulo del juego para ver los detalles");

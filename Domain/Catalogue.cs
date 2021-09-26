@@ -5,9 +5,14 @@ namespace Domain
 {
     public class Catalogue
     {
+        private static Catalogue instance = new Catalogue();
         public List<Game> Games { get; set; }
 
-        public Catalogue()
+        public static Catalogue Instance
+        {
+            get { return instance; }
+        }
+        private Catalogue()
         {
             this.Games = new List<Game>();
         }

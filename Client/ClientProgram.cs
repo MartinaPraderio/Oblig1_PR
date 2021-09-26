@@ -63,7 +63,8 @@ namespace Client
             Console.WriteLine("4- Buscar juego");
             Console.WriteLine("5- Calificar juego");
             Console.WriteLine("6- Detalle del juego");
-            Console.WriteLine("7- Desconectarse del servidor");
+            Console.WriteLine("7- Descargar caratula de un juego");
+            Console.WriteLine("8- Desconectarse del servidor");
 
         }
 
@@ -136,10 +137,15 @@ namespace Client
                                 }
                             case "7":
                                 {
+                                    clientServicesManager.DownloadGameCover();
+                                    break;
+                                }
+                            case "8":
+                                {
                                     clientServicesManager.SendEmptyMessage();
                                     clientSocket.Shutdown(SocketShutdown.Both);
                                     clientSocket.Close();
-                                    Console.WriteLine("7- Cliente desconectado del servidor!");
+                                    Console.WriteLine("Cliente desconectado del servidor!");
                                     break;
                                 }
                         }

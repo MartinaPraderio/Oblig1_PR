@@ -14,7 +14,7 @@ namespace BusinessLogic
         private List<User> users;
         public ServerServicesManager()
         {
-            this.gameCatalogue = new Catalogue();
+            this.gameCatalogue = Catalogue.Instance;
             this.users = new List<User>();
         }
 
@@ -38,7 +38,8 @@ namespace BusinessLogic
             return response;
         }
 
-        public void AcceptClient(){}
+        public void AcceptClient(){
+        }
         public void ViewCatalogue(){}
         public void BuyGame(){}
 
@@ -150,6 +151,39 @@ namespace BusinessLogic
             gameToQualify.AddRating(newRating);
             string addRatingResponse = "Su review fue publicada con exito.";
             return addRatingResponse;
+        }
+
+        internal void PublishGame()
+        {
+            Console.WriteLine("ingrese el titulo del juego");
+            string title = Console.ReadLine();
+            Console.WriteLine("ingrese el synopsis del juego");
+            string synopsis = Console.ReadLine();
+            Console.WriteLine("ingrese el genero del juego");
+            Console.WriteLine("Accion (Ingrese 1)");
+            Console.WriteLine("Aventura (Ingrese 2)");
+            Console.WriteLine("Estrategia (Ingrese 3)");
+            Console.WriteLine("Infantil (Ingrese 4)");
+            string gender = Console.ReadLine();
+            GameGender genderGame = GameGender.PorDefecto;
+            switch (gender)
+            {
+                case "1":
+                    genderGame = GameGender.Accion;
+                    break;
+                case "2":
+                    genderGame = GameGender.Aventura;
+                    break;
+                case "3":
+                    genderGame = GameGender.Estrategia;
+                    break;
+                case "4":
+                    genderGame = GameGender.Infantil;
+                    break;
+            }
+            Game game = new Game(title, genderGame, synopsis, "cover");
+            this.gameCatalogue.AddGame(game);
+            Console.WriteLine("Juego publicado!");
         }
     }
 }
