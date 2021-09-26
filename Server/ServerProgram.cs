@@ -38,14 +38,31 @@ namespace Server
             }
             Console.WriteLine("Exiting....");
         }*/
+        private static int AcceptClient(Socket serverSocket, int clientCounter)
+        {
+            Console.WriteLine("Esperando por conexiones....");
+            var handler = serverSocket.Accept();
+            Console.WriteLine("Cliente conectado!");
+            new Thread(() => HandleClient(handler)).Start();
+            clientCounter++;
+            return clientCounter;
+        }
 
+        private static void PrintMenu()
+        {
+            Console.WriteLine("-----------------------------------");
+            Console.WriteLine(" Menu:");
+            Console.WriteLine("1- Aceptar un cliente");
+            Console.WriteLine("2- Ver catalogo de juegos");
+            Console.WriteLine("3- Desconectar servidor");
+            Console.WriteLine("-----------------------------------");
+        }
         private static void HandleClient(Socket clientSocket)
         {
             bool exit = false;
             while (!exit)
             {
                 string command = ProtocolDataProgram.Listen(clientSocket);
-                Console.WriteLine("Comando: "+command);
                 string message = ProtocolDataProgram.Listen(clientSocket);
                 switch (command) 
                 {
@@ -156,40 +173,15 @@ namespace Server
                             }
                         case "2":
                             {
-                                serverServicesManager.PublishGame();
+                                serverServicesManager.ViewCatalogue();
                                 break;
-                            }
+                            }                            
                         case "3":
                             {
-                                //serverServicesManager.ModifyGame();
-                                break;
-                            }
-                        case "4":
-                            {
-                                serverServicesManager.SearchGame();
-                                break;
-                            }
-                        case "5":
-                            {
-                                serverServicesManager.QualifyGame();
-                                break;
-                            }
-                        case "6":
-                            {
-                                //serverServicesManager.GameDetails();
-                                break;
-                            }
-                        case "7":
-                            {
-                                //serverServicesManager.DownloadGameCover();
-                                break;
-                            }
-                        case "8":
-                            {
-                                //serverServicesManager.SendEmptyMessage();
+                                serverSocket.Close(0);
                                 //clientSocket.Shutdown(SocketShutdown.Both);
                                 //clientSocket.Close();
-                                Console.WriteLine("Cliente desconectado del servidor!");
+                                Console.WriteLine("Desconectando el servidor!");
                                 break;
                             }
                     }
@@ -202,33 +194,6 @@ namespace Server
             {
                 Console.WriteLine("Excepcion: " + s.Message + ", Error Code: " + s.ErrorCode + ", Scoket Error Code: " + s.SocketErrorCode);
             }
-
         }
-
-        private static int AcceptClient(Socket serverSocket, int clientCounter)
-        {
-            Console.WriteLine("Esperando por conexiones....");
-            var handler = serverSocket.Accept();
-            Console.WriteLine("Cliente conectado!");
-            new Thread(() => HandleClient(handler)).Start();
-            clientCounter++;
-            return clientCounter;
-        }
-
-        public static void PrintMenu()
-        {
-            Console.WriteLine("-----------------------------------");
-            Console.WriteLine(" Menu:");
-            Console.WriteLine("1- Aceptar un cliente");
-            Console.WriteLine("2- Publicar juego");
-            Console.WriteLine("4- Buscar juego");
-            Console.WriteLine("5- Calificar juego");
-            Console.WriteLine("6- Detalle del juego");
-            Console.WriteLine("7- Descargar caratula de un juego");
-            Console.WriteLine("8- Ver catalogo de juegos");
-            Console.WriteLine("-----------------------------------");
-        }
-
-       
     }
 }

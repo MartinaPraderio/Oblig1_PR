@@ -22,8 +22,6 @@ namespace BusinessLogic
             this.gameCatalogue.AddGame(newGame);
             return "Juego agegado con exito";
         }
-        public void QualifyGame() { }
-        public Game SearchGame() { return new Game("titulo",GameGender.Accion,"sino","cover"); }
         public string GameDetails(string message) {
             Game game = gameCatalogue.Games.Find(x => x.Title.Equals(message));
             string response = "";
@@ -40,8 +38,10 @@ namespace BusinessLogic
 
         public void AcceptClient(){
         }
-        public void ViewCatalogue(){}
-        public void BuyGame(){}
+        public void ViewCatalogue(){
+            gameCatalogue.DisplayGames();
+        }
+  
 
         public string AddUser(User newUser) {
             Console.WriteLine("cant usuarios "+users.Count);
@@ -153,37 +153,37 @@ namespace BusinessLogic
             return addRatingResponse;
         }
 
-        internal void PublishGame()
-        {
-            Console.WriteLine("ingrese el titulo del juego");
-            string title = Console.ReadLine();
-            Console.WriteLine("ingrese el synopsis del juego");
-            string synopsis = Console.ReadLine();
-            Console.WriteLine("ingrese el genero del juego");
-            Console.WriteLine("Accion (Ingrese 1)");
-            Console.WriteLine("Aventura (Ingrese 2)");
-            Console.WriteLine("Estrategia (Ingrese 3)");
-            Console.WriteLine("Infantil (Ingrese 4)");
-            string gender = Console.ReadLine();
-            GameGender genderGame = GameGender.PorDefecto;
-            switch (gender)
-            {
-                case "1":
-                    genderGame = GameGender.Accion;
-                    break;
-                case "2":
-                    genderGame = GameGender.Aventura;
-                    break;
-                case "3":
-                    genderGame = GameGender.Estrategia;
-                    break;
-                case "4":
-                    genderGame = GameGender.Infantil;
-                    break;
-            }
-            Game game = new Game(title, genderGame, synopsis, "cover");
-            this.gameCatalogue.AddGame(game);
-            Console.WriteLine("Juego publicado!");
-        }
+        //internal void PublishGame()
+        //{
+        //    Console.WriteLine("ingrese el titulo del juego");
+        //    string title = Console.ReadLine();
+        //    Console.WriteLine("ingrese el synopsis del juego");
+        //    string synopsis = Console.ReadLine();
+        //    Console.WriteLine("ingrese el genero del juego");
+        //    Console.WriteLine("Accion (Ingrese 1)");
+        //    Console.WriteLine("Aventura (Ingrese 2)");
+        //    Console.WriteLine("Estrategia (Ingrese 3)");
+        //    Console.WriteLine("Infantil (Ingrese 4)");
+        //    string gender = Console.ReadLine();
+        //    GameGender genderGame = GameGender.PorDefecto;
+        //    switch (gender)
+        //    {
+        //        case "1":
+        //            genderGame = GameGender.Accion;
+        //            break;
+        //        case "2":
+        //            genderGame = GameGender.Aventura;
+        //            break;
+        //        case "3":
+        //            genderGame = GameGender.Estrategia;
+        //            break;
+        //        case "4":
+        //            genderGame = GameGender.Infantil;
+        //            break;
+        //    }
+        //    Game game = new Game(title, genderGame, synopsis, "cover");
+        //    this.gameCatalogue.AddGame(game);
+        //    Console.WriteLine("Juego publicado!");
+        //}
     }
 }
