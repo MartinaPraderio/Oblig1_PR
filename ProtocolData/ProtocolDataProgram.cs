@@ -18,7 +18,8 @@ namespace ProtocolData
         SearchGameByRating,
         QualifyGame,
         GameDetails,
-        EndConnection
+        EndConnection,
+        GameCover
     }
 
     public class ProtocolDataProgram

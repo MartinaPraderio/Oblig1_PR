@@ -5,6 +5,7 @@ using ProtocolData;
 using System.Collections.Generic;
 using System.Text.Json;
 using Newtonsoft.Json;
+using System.IO;
 
 namespace BusinessLogic
 {
@@ -12,15 +13,21 @@ namespace BusinessLogic
     {
         private Catalogue gameCatalogue;
         private List<User> users;
-        public ServerServicesManager()
+        private Socket serverSocket;
+        FileCommunicationHandler fileCommunication;
+        
+        public ServerServicesManager(Socket serverSocket)
         {
             this.gameCatalogue = Catalogue.Instance;
             this.users = new List<User>();
+            this.serverSocket = serverSocket;
         }
 
-        public string PublishGame(Game newGame) {
+        public string PublishGame(Game newGame, Socket clientSocket) {
+            this.fileCommunication = new FileCommunicationHandler(clientSocket);
+            fileCommunication.ReceiveFile();
             this.gameCatalogue.AddGame(newGame);
-            return "Juego agegado con exito";
+            return "Juego agregado con exito";
         }
         public string GameDetails(string message) {
             Game game = gameCatalogue.Games.Find(x => x.Title.Equals(message));
@@ -151,6 +158,20 @@ namespace BusinessLogic
             gameToQualify.AddRating(newRating);
             string addRatingResponse = "Su review fue publicada con exito.";
             return addRatingResponse;
+        }
+
+        public string SendGameCover(string gameCover,Socket clientSocket)
+        {
+            string path = Directory.GetCurrentDirectory() + "\\" + gameCover;
+         //Console.WriteLine("Path de cover: "+path);
+            if (File.Exists(path))
+            {
+                Console.WriteLine("Enviando imagen al cliente...");
+                var fileCommunication = new FileCommunicationHandler(clientSocket);
+                fileCommunication.SendFile(path);
+                Console.WriteLine("Imagen enviada!");
+            }
+            return "La imagen solicitada fue recibida";
         }
 
         //internal void PublishGame()

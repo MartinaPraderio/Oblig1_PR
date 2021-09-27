@@ -63,8 +63,7 @@ namespace Client
             Console.WriteLine("4- Buscar juego");
             Console.WriteLine("5- Calificar juego");
             Console.WriteLine("6- Detalle del juego");
-            Console.WriteLine("7- Descargar caratula de un juego");
-            Console.WriteLine("8- Desconectarse del servidor");
+            Console.WriteLine("7 Desconectarse del servidor");
 
         }
 
@@ -89,15 +88,13 @@ namespace Client
                     string userCreatedResponse = ProtocolDataProgram.Listen(clientSocket);
                     Console.WriteLine(userCreatedResponse);
 
-                    Console.WriteLine("Connected to server");
-
                     //ProtocolDataProgram.Send(clientSocket);
 
                     Console.WriteLine("Bienvenido a la plataforma");
                     string menuOption="";
                     //ClientServicesManager.SendUserName(clientSocket,userName);
                     
-                    while (menuOption != "8")
+                    while (menuOption != "7")
                     {
 
                             printMenu();
@@ -136,12 +133,7 @@ namespace Client
                                         clientServicesManager.GameDetails();
                                         break;
                                     }
-                                case "7":
-                                    {
-                                        clientServicesManager.DownloadGameCover();
-                                        break;
-                                    }
-                                case "8":
+                            case "7":
                                     {
                                         clientServicesManager.EndConnection();
                                         clientSocket.Shutdown(SocketShutdown.Both);

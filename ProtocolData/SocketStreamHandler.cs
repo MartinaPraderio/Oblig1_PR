@@ -1,6 +1,7 @@
-﻿using System.Net.Sockets;
+﻿using System;
+using System.Net.Sockets;
 
-namespace Common
+namespace ProtocolData
 {
     public class SocketStreamHandler
     {

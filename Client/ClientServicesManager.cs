@@ -5,16 +5,18 @@ using ProtocolData;
 using System.Text.Json;
 using Newtonsoft.Json;
 using System.Collections.Generic;
+using System.IO;
 
 namespace Client
 {
-    public class ClientServicesManager 
+    public class ClientServicesManager
     {
         private ProtocolDataProgram protocolHandleData;
 
         private Socket clientSocket;
 
         private string userName;
+        private FileCommunicationHandler fileCommunication;
 
         public ClientServicesManager(Socket client, string userName)
         {
@@ -29,15 +31,6 @@ namespace Client
             ProtocolDataProgram.Send(clientSocket, action.ToString());
             ProtocolDataProgram.Send(clientSocket, message);
         }
-
-
-        //public void sendusername(Socket clientsocket, string username)
-        //{
-        //    //username = "[0]" + username;
-        //    //llamar a otra funcion dentro de esta clase que
-        //    Sendmessage(username, action.Sendusername);
-
-        //}
 
         public void PublishGame()
         {
@@ -67,21 +60,31 @@ namespace Client
                     genderGame = GameGender.Infantil;
                     break;
             }
-            Game game = new Game(title, genderGame, synopsis, "cover");
+            Console.WriteLine("Ingrese el path de la caratula del juego");
+            string path = Console.ReadLine();
+            var fileInfo = new FileInfo(path);
+            string fileName = fileInfo.Name;
+
+            Game game = new Game(title, genderGame, synopsis, fileName);
+            Console.WriteLine("Nombre del acrhivo: " + fileName);
             string message = System.Text.Json.JsonSerializer.Serialize(game);
             SendMessage(message, action.PublishGame);
+           
+            if (File.Exists(path))
+            {
+                Console.WriteLine("Mandando imagen al servidor");
+                var fileCommunication = new FileCommunicationHandler(clientSocket);
+                fileCommunication.SendFile(path);
+                Console.WriteLine("Se termino de mandar la imagen al servidor");
+            }
+
             string response = ProtocolDataProgram.Listen(clientSocket);
+            Console.WriteLine(response);
         }
 
-
-
-        //public override void qualifygame() { }
-        //public override game searchgame() { return new game(); }
-        //public override void gamedetails() { }
-
-        public void RequestServerConnection(){}
-        public void EndServerConnection(){}
-        public void ModifyGame(){
+        public void EndServerConnection() { }
+        public void ModifyGame()
+        {
             Console.WriteLine("ingrese el titulo del juego a modificar");
             string title = Console.ReadLine();
             Console.WriteLine("ingrese el nuevo titulo del juego");
@@ -111,12 +114,13 @@ namespace Client
                     break;
             }
             Game game = new Game(newTitle, genderGame, synopsis, "cover");
-            string message = title+ Environment.NewLine + System.Text.Json.JsonSerializer.Serialize(game);
+            string message = title + Environment.NewLine + System.Text.Json.JsonSerializer.Serialize(game);
             SendMessage(message, action.ModifyGame);
             string response = ProtocolDataProgram.Listen(clientSocket);
             Console.WriteLine(response);
         }
-        public void DeleteGame(){
+        public void DeleteGame()
+        {
             Console.WriteLine("ingrese el titulo del juego a eliminar");
             string title = Console.ReadLine();
             SendMessage(title, action.DeleteGame);
@@ -163,7 +167,7 @@ namespace Client
             // parte del protocolo, osea que el client para cualquier accion q quiera hacer se identifique mandando
             // su username. Despues, del lado del server a veces es necesario ver que user nos mando la request y a
             // veces no. X ej en este caso lo necesitamos para saber de q user es la rating
-            string message = gameTitleToQualify + Environment.NewLine + calification.ToString() + Environment.NewLine + review + Environment.NewLine + userName ;
+            string message = gameTitleToQualify + Environment.NewLine + calification.ToString() + Environment.NewLine + review + Environment.NewLine + userName;
             SendMessage(message, action.QualifyGame);
 
             string response = ProtocolDataProgram.Listen(clientSocket);
@@ -173,11 +177,6 @@ namespace Client
         internal void EndConnection()
         {
             SendMessage("", action.EndConnection);
-        }
-
-        internal void DownloadGameCover()
-        {
-            throw new NotImplementedException();
         }
 
         public void GameDetails()
@@ -196,11 +195,12 @@ namespace Client
 
                 Game aGame = JsonConvert.DeserializeObject<Game>(info[1]);
                 Console.WriteLine("Los detalles del juego buscado son:");
-                Console.WriteLine("Titulo: "+ aGame.Title);
+                Console.WriteLine("Titulo: " + aGame.Title);
                 Console.WriteLine("Sinopsis: " + aGame.Synopsis);
                 Console.WriteLine("Categoría: " + aGame.Gender);
                 GameCalification calification = GameCalification.PorDefecto;
-                switch (Math.Truncate(aGame.RatingAverage)){
+                switch (Math.Truncate(aGame.RatingAverage))
+                {
                     case 1:
                         calification = GameCalification.Muy_Malo;
                         break;
@@ -218,6 +218,18 @@ namespace Client
                         break;
                 }
                 Console.WriteLine("Calificacion media: " + calification.ToString());
+                Console.WriteLine("===> Desea descargar la caratula?");
+                Console.WriteLine("Si (Digite 1)");
+                Console.WriteLine("No (Digite 2)");
+                string option = Console.ReadLine();
+                if (option.Equals("1"))
+                {
+                    SendMessage(aGame.Cover, action.GameCover);
+                    this.fileCommunication = new FileCommunicationHandler(clientSocket);
+                    fileCommunication.ReceiveFile();
+                    string responseCover = ProtocolDataProgram.Listen(clientSocket);
+                    Console.WriteLine(responseCover);
+                }
                 Console.WriteLine("---------------------------");
             }
         }
@@ -304,13 +316,13 @@ namespace Client
             }
             else
             {
-                
+
                 List<Game> games = JsonConvert.DeserializeObject<List<Game>>(info[1]);
                 Console.WriteLine("Los siguientes juegos cumplen con su busqueda");
                 int count = 1;
                 foreach (Game game in games)
                 {
-                    Console.WriteLine("Juego "+ count + ":");
+                    Console.WriteLine("Juego " + count + ":");
                     Console.WriteLine("Titulo: " + game.Title);
                     Console.WriteLine("Sinopsis: " + game.Synopsis);
                     Console.WriteLine("Categoría: " + game.Gender);
@@ -318,7 +330,7 @@ namespace Client
                     count++;
                 }
             }
-            
+
         }
 
         internal void SendEmptyMessage()
@@ -327,4 +339,3 @@ namespace Client
         }
     }
 }
-

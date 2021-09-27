@@ -69,7 +69,7 @@ namespace Server
                     case "PublishGame":
                         {
                             Game aGame = JsonConvert.DeserializeObject<Game>(message);
-                            string response = serverServicesManager.PublishGame(aGame);
+                            string response = serverServicesManager.PublishGame(aGame,clientSocket);
                             ProtocolDataProgram.Send(clientSocket,response);
                             break;
                         }
@@ -127,6 +127,12 @@ namespace Server
                             exit = true;
                             break;
                         }
+                    case "GameCover":
+                        {
+                            string response = serverServicesManager.SendGameCover(message, clientSocket);
+                            ProtocolDataProgram.Send(clientSocket, response);
+                            break;
+                        }
                 }
 
             }
@@ -150,7 +156,7 @@ namespace Server
             string ServerIpAdress = "127.0.0.1";
             int ServerPort = 2000;
             int Backlog = 100;
-            serverServicesManager = new ServerServicesManager();
+            serverServicesManager = new ServerServicesManager(serverSocket);
 
             IPEndPoint serverIPEndPoint = new IPEndPoint(IPAddress.Parse(ServerIpAdress),ServerPort);
 
