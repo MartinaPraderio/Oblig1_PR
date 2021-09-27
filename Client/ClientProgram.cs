@@ -11,15 +11,13 @@ namespace Client
     class ClientProgram
     {
 
-        private static IConfiguration builder = new ConfigurationBuilder().AddJsonFile($"settings.json",true, true).Build();
+        private static string ServerIpAdress;
 
-        private static string ServerIpAdress = "127.0.0.1"; //builder["ServerIpAdress"];
+        private static int ServerPort;
 
-        private static int ServerPort = 2000; //Int32.Parse(builder["ServerPort"]);
+        private static string ClientIpAdress;
 
-        private static string ClientIpAdress = "127.0.0.1"; //builder["ClientIpAdress"];
-
-        private static int ClientPort = 6001; //Int32.Parse(builder["ClientPort"]);
+        private static int ClientPort;
 
         private static Socket clientSocket;
 
@@ -69,7 +67,12 @@ namespace Client
 
         static void Main(string[] args)
         {
-            InitSocket();
+            IConfiguration builder = new ConfigurationBuilder().AddJsonFile("settings.json", true, true).Build();
+            ServerIpAdress = builder["Server:IP"];
+            ServerPort = Int32.Parse(builder["Server:ServerPort"]);
+            ClientIpAdress = builder["Server:IP"];
+            ClientPort = Int32.Parse(builder["Server:ClientPort"]);
+        InitSocket();
             Console.WriteLine("¿Desea conectarse al servidor?");
             Console.WriteLine("Si (Digite 1)");
             Console.WriteLine("No (Digite 2)");

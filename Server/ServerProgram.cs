@@ -140,22 +140,20 @@ namespace Server
 
         static void Main(string[] args)
         {
-            //IConfiguration builder = new ConfigurationBuilder().AddJsonFile("AppSettings.json", true, true).Build();
+            IConfiguration builder = new ConfigurationBuilder().AddJsonFile("AppSettings.json", true, true).Build();
 
-            //var ServerIpAdress = builder["Server:IP"];
-            //var ServerPort = Int32.Parse(builder["Server:Port"]);
-            //var ServerIpAdress = builder["ServerIpAdress"];
-            //var ServerPort = Int32.Parse(builder["ServerPort"]);
-            //var Backlog = Int32.Parse(builder["Server:Backlog"]);
-            //Console.WriteLine("Soy server");
+            var ServerIpAdress = builder["Server:IP"];
+            var ServerPort = Int32.Parse(builder["Server:Port"]);
+            var Backlog = Int32.Parse(builder["Server:Backlog"]);
+            Console.WriteLine("Soy server"+ ServerIpAdress + ServerPort + Backlog);
             Socket serverSocket = new Socket(
                 AddressFamily.InterNetwork,
                 SocketType.Stream,
                 ProtocolType.Tcp
             );
-            string ServerIpAdress = "127.0.0.1";
-            int ServerPort = 2000;
-            int Backlog = 100;
+            //string ServerIpAdress = "127.0.0.1";
+            //int ServerPort = 2000;
+            //int Backlog = 100;
             serverServicesManager = new ServerServicesManager(serverSocket);
 
             IPEndPoint serverIPEndPoint = new IPEndPoint(IPAddress.Parse(ServerIpAdress),ServerPort);
