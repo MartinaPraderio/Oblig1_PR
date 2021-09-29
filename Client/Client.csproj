@@ -7,7 +7,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ProtocolData\ProtocolData.csproj" />
-    <ProjectReference Include="..\BusinessLogic\BusinessLogic.csproj" />
   </ItemGroup>
   <ItemGroup>
     <None Remove="Microsoft.Extensions.Configuration" />
