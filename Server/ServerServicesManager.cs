@@ -211,5 +211,15 @@ namespace Server
             return "La imagen solicitada fue recibida";
         }
 
+        internal void CargarDatosDePrueba()
+        {
+            Game fifa = new Game("Fifa 21 Prueba", GameGender.Deporte, "Futbol actual", "fifa.jpg");
+            fifa.AddRating(new UserRating("Muy buen juego", GameCalification.Bueno, new User("PacoPrueba")));
+            fifa.AddRating(new UserRating("No es compatible con mi pc", GameCalification.Muy_Malo, new User("JuanPrueba")));
+            gameCatalogue.AddGame(fifa);
+            gameCatalogue.AddGame(new Game("Call of duty Prueba", GameGender.Accion, "Shooter", "COD.jpg"));
+            gameCatalogue.AddGame(new Game("Mario Bros", GameGender.Aventura, "juego de nintendo", "mario.jpg"));
+
+        }
     }
 }

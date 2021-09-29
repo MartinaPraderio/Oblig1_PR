@@ -165,7 +165,7 @@ namespace Server
             serverServicesManager.SetSocket(serverSocket);
 
             IPEndPoint serverIPEndPoint = new IPEndPoint(IPAddress.Parse(ServerIpAdress),ServerPort);
-
+            bool inicio = true;
             try
             {
                 serverSocket.Bind(serverIPEndPoint);
@@ -173,6 +173,24 @@ namespace Server
                 new Thread(() => ListenForConnections(serverSocket)).Start();
                 while (!_exit)
                 {
+                    if (inicio)
+                    {
+                        Console.WriteLine("Si desea iniciar la aplicacion con datos de prueba ingrese 1");
+                        string response = Console.ReadLine();
+                        Console.WriteLine("");
+                        if (response.Equals("1"))
+                        {
+                            serverServicesManager.CargarDatosDePrueba();
+                            Console.WriteLine("Su aplicación se iniciara con datos de prueba");
+                        }
+                        else
+                        {
+                            Console.WriteLine("Su aplicación se iniciara vacía");
+                        }
+                        Console.WriteLine("---------------------------------------------");
+                        Console.WriteLine("");
+                        inicio = false;
+                    }
                     PrintMenu();
                     string option = Console.ReadLine();
                     switch (option)
