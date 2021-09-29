@@ -2,7 +2,6 @@
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
-using BusinessLogic;
 using Microsoft.Extensions.Configuration;
 using ProtocolData;
 using Domain;
@@ -152,7 +151,7 @@ namespace Server
 
         static void Main(string[] args)
         {
-            IConfiguration builder = new ConfigurationBuilder().AddJsonFile("AppSettings.json", true, true).Build();
+            IConfiguration builder = new ConfigurationBuilder().AddJsonFile("Settings.json", true, true).Build();
 
             var ServerIpAdress = builder["Server:IP"];
             var ServerPort = Int32.Parse(builder["Server:Port"]);

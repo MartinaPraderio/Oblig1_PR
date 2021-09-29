@@ -5,7 +5,7 @@ using ProtocolData;
 using System.Collections.Generic;
 using System.IO;
 
-namespace BusinessLogic
+namespace Server
 {
     public class ServerServicesManager
     {

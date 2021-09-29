@@ -3,7 +3,6 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using ProtocolData;
-using BusinessLogic;
 using Microsoft.Extensions.Configuration;
 
 namespace Client
@@ -34,7 +33,7 @@ namespace Client
 
         static void Main(string[] args)
         {
-            IConfiguration builder = new ConfigurationBuilder().AddJsonFile("settings.json", true, true).Build();
+            IConfiguration builder = new ConfigurationBuilder().AddJsonFile("Settings.json", true, true).Build();
             string ServerIpAdress = builder["Server:IP"];
             var ServerPort = Int32.Parse(builder["Server:ServerPort"]);
             string ClientIpAdress = builder["Server:IP"];
