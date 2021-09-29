@@ -29,39 +29,52 @@ namespace Server
         public string PublishGame(Game newGame, Socket clientSocket) {
                 this.fileCommunication = new FileCommunicationHandler(clientSocket);
                 fileCommunication.ReceiveFile();
-                this.gameCatalogue.AddGame(newGame);
+                lock (this.gameCatalogue.Games)
+                {
+                    this.gameCatalogue.AddGame(newGame);
+                }
                 return "Juego agregado con exito";
         }
         public string GameDetails(string message) {
-            Game game = gameCatalogue.FindGame(message);
             string response = "";
-            if (game != null)
+            lock (this.gameCatalogue.Games)
             {
-                response = "E" + Environment.NewLine + ProtocolDataProgram.SerializeGame(game);
-            }
-            else
-            {
-                response = "N" + Environment.NewLine + "El juego que busca no existe";
+                Game game = gameCatalogue.FindGame(message);
+            
+                if (game != null)
+                {
+                    response = "E" + Environment.NewLine + ProtocolDataProgram.SerializeGame(game);
+                }
+                else
+                {
+                    response = "N" + Environment.NewLine + "El juego que busca no existe";
+                }
             }
             return response;
         }
 
         public string ViewCatalogue(){
-            return gameCatalogue.DisplayGames();
+            lock (this.gameCatalogue.Games)
+            {
+                return gameCatalogue.DisplayGames();
+            }
         }
   
 
         public string AddUser(User newUser) {
-            this.users.Add(newUser);
-            this.loggedUser = newUser;
+            lock (this.users)
+            {
+                this.users.Add(newUser);
+                this.loggedUser = newUser;
+            }
             return "Usuario agragado con exito";
         }
 
         public string DeleteGame(string message)
         {
-            Game aGame = gameCatalogue.FindGame(message);
             lock (this.gameCatalogue.Games)
             {
+                Game aGame = gameCatalogue.FindGame(message);
                 string response = "";
                 if (aGame != null)
                 {
@@ -80,10 +93,10 @@ namespace Server
         public string ModifyGame(string message)
         {
             string[] info = message.Split(Environment.NewLine);
-            Game aGame = gameCatalogue.FindGame(info[0]);
-            lock (aGame)
+            
+            lock (this.gameCatalogue.Games)
             {
-                
+                Game aGame = gameCatalogue.FindGame(info[0]);
                 string response = "";
                 if (aGame != null)
                 {
@@ -110,52 +123,60 @@ namespace Server
 
         public string SearchGameByTitle(string message)
         {
-            
-            List<Game> games = gameCatalogue.FindAllGamesContaining(message);
-            string response = "";
-            if (games.Count != 0)
+            lock (this.gameCatalogue.Games)
             {
-                string serializedList = ProtocolDataProgram.SerializeGameList(games);
-                response = "E"+Environment.NewLine+serializedList;
+                List<Game> games = gameCatalogue.FindAllGamesContaining(message);
+                string response = "";
+                if (games.Count != 0)
+                {
+                    string serializedList = ProtocolDataProgram.SerializeGameList(games);
+                    response = "E" + Environment.NewLine + serializedList;
+                }
+                else
+                {
+                    response = "N" + Environment.NewLine + "El juego que busca no existe";
+                }
+                return response;
             }
-            else
-            {
-                response = "N"+Environment.NewLine+"El juego que busca no existe";
-            }
-            return response;
         }
 
         public string SearchGameByGender(string message)
         {
-            List<Game> games = gameCatalogue.FindAllGamesByGender(message);
-            string response = "";
-            if (games.Count != 0)
+            lock (this.gameCatalogue.Games)
             {
-                string serializedList = ProtocolDataProgram.SerializeGameList(games);
-                response = "E" + Environment.NewLine + serializedList;
+                List<Game> games = gameCatalogue.FindAllGamesByGender(message);
+                string response = "";
+                if (games.Count != 0)
+                {
+                    string serializedList = ProtocolDataProgram.SerializeGameList(games);
+                    response = "E" + Environment.NewLine + serializedList;
+                }
+                else
+                {
+                    response = "N" + Environment.NewLine + "El juego que busca no existe";
+                }
+                return response;
             }
-            else
-            {
-                response = "N" + Environment.NewLine + "El juego que busca no existe";
-            }
-            return response;
         }
 
         public string SearchGameByRating(string calification)
         {
             GameCalification calif = ProtocolDataProgram.ParseGameCalification(calification);
-            List<Game> games = gameCatalogue.FindAllGames(calif);
-            string response = "";
-            if (games.Count != 0)
+            lock (this.gameCatalogue.Games)
             {
-                string serializedList = ProtocolDataProgram.SerializeGameList(games);
-                response = "E" + Environment.NewLine + serializedList;
+                List<Game> games = gameCatalogue.FindAllGames(calif);
+                string response = "";
+                if (games.Count != 0)
+                {
+                    string serializedList = ProtocolDataProgram.SerializeGameList(games);
+                    response = "E" + Environment.NewLine + serializedList;
+                }
+                else
+                {
+                    response = "N" + Environment.NewLine + "El juego que busca no existe";
+                }
+                return response;
             }
-            else
-            {
-                response = "N" + Environment.NewLine + "El juego que busca no existe";
-            }
-            return response;
         }
 
         public string QualifyGame(string message)
@@ -164,38 +185,43 @@ namespace Server
             string gameTitle = info[0];
             GameCalification calification = ProtocolDataProgram.ParseGameCalification(info[1]);
             string review = info[2];
-            
-            Game gameToQualify = gameCatalogue.FindGame(gameTitle);
-            string addRatingResponse = "";
-            if (gameToQualify != null)
+            lock (this.gameCatalogue.Games)
             {
-                UserRating newRating = new UserRating(review, calification, loggedUser);
-                gameToQualify.AddRating(newRating);
-                addRatingResponse = "Su review fue publicada con exito.";
+                Game gameToQualify = gameCatalogue.FindGame(gameTitle);
+                string addRatingResponse = "";
+                if (gameToQualify != null)
+                {
+                    UserRating newRating = new UserRating(review, calification, loggedUser);
+                    gameToQualify.AddRating(newRating);
+                    addRatingResponse = "Su review fue publicada con exito.";
+                }
+                else
+                {
+                    addRatingResponse = "El juego que desea calificar no existe." + Environment.NewLine +
+                        "Asegurese de ingresar el nombre correctamente.";
+                }
+                return addRatingResponse;
             }
-            else
-            {
-                addRatingResponse = "El juego que desea calificar no existe."+Environment.NewLine+
-                    "Asegurese de ingresar el nombre correctamente.";
-            }
-            return addRatingResponse;
         }
 
         public string BuyGame(string message)
         {
-            string response = "";
-            Game requestedGame = gameCatalogue.FindGame(message);
-            if(requestedGame != null)
+            lock (this.gameCatalogue.Games)
             {
-                loggedUser.AddGame(requestedGame);
-                response = "Su compra ha finalizado con exito";
+                string response = "";
+                Game requestedGame = gameCatalogue.FindGame(message);
+                if (requestedGame != null)
+                {
+                    loggedUser.AddGame(requestedGame);
+                    response = "Su compra ha finalizado con exito";
+                }
+                else
+                {
+                    response = "El juego que desea adquirir no existe." + Environment.NewLine +
+                        "Asegurese de ingresar el nombre correctamente.";
+                }
+                return response;
             }
-            else
-            {
-                response = "El juego que desea adquirir no existe." + Environment.NewLine +
-                    "Asegurese de ingresar el nombre correctamente.";
-            }
-            return response;
         }
 
         public string SendGameCover(string gameCover,Socket clientSocket)
@@ -211,15 +237,17 @@ namespace Server
             return "La imagen solicitada fue recibida";
         }
 
-        internal void CargarDatosDePrueba()
+        public void CargarDatosDePrueba()
         {
-            Game fifa = new Game("Fifa 21 Prueba", GameGender.Deporte, "Futbol actual", "fifa.jpg");
-            fifa.AddRating(new UserRating("Muy buen juego", GameCalification.Bueno, new User("PacoPrueba")));
-            fifa.AddRating(new UserRating("No es compatible con mi pc", GameCalification.Muy_Malo, new User("JuanPrueba")));
-            gameCatalogue.AddGame(fifa);
-            gameCatalogue.AddGame(new Game("Call of duty Prueba", GameGender.Accion, "Shooter", "COD.jpg"));
-            gameCatalogue.AddGame(new Game("Mario Bros", GameGender.Aventura, "juego de nintendo", "mario.jpg"));
-
+            lock (this.gameCatalogue.Games)
+            {
+                Game fifa = new Game("Fifa 21 Prueba", GameGender.Deporte, "Futbol actual", "fifa.jpg");
+                fifa.AddRating(new UserRating("Muy buen juego", GameCalification.Bueno, new User("PacoPrueba")));
+                fifa.AddRating(new UserRating("No es compatible con mi pc", GameCalification.Muy_Malo, new User("JuanPrueba")));
+                gameCatalogue.AddGame(fifa);
+                gameCatalogue.AddGame(new Game("Call of duty Prueba", GameGender.Accion, "Shooter", "COD.jpg"));
+                gameCatalogue.AddGame(new Game("Mario Bros", GameGender.Aventura, "juego de nintendo", "mario.jpg"));
+            }
         }
     }
 }
