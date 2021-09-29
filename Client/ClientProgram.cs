@@ -17,15 +17,18 @@ namespace Client
 
         public static void printMenu()
         {
-            Console.WriteLine("Menu:");
-            Console.WriteLine("1- Publicar juego");
-            Console.WriteLine("2- Eliminar juego");
-            Console.WriteLine("3- Modificar juego");
-            Console.WriteLine("4- Buscar juego");
-            Console.WriteLine("5- Calificar juego");
-            Console.WriteLine("6- Detalle del juego");
-            Console.WriteLine("7- Adquirir Juego");
-            Console.WriteLine("8 Desconectarse del servidor");
+            Console.WriteLine("");
+            Console.WriteLine("------- Menu:------------------------");
+            Console.WriteLine("1 - Publicar juego");
+            Console.WriteLine("2 - Eliminar juego");
+            Console.WriteLine("3 - Modificar juego");
+            Console.WriteLine("4 - Buscar juego");
+            Console.WriteLine("5 - Calificar juego");
+            Console.WriteLine("6 - Detalle del juego");
+            Console.WriteLine("7 - Adquirir Juego");
+            Console.WriteLine("8 - Desconectarse del servidor");
+            Console.WriteLine("-------------------------------------");
+            Console.WriteLine("");
 
         }
 
@@ -39,6 +42,7 @@ namespace Client
             Console.WriteLine("¿Desea conectarse al servidor?");
             Console.WriteLine("Si (Digite 1)");
             Console.WriteLine("No (Digite 2)");
+            Console.WriteLine("-------------------------------------");
 
             string response = Console.ReadLine();
 
@@ -64,6 +68,8 @@ namespace Client
                     clientSocket.Connect(serverIPEndPoint);
 
                     Console.WriteLine("Cliente conectado al servidor!");
+                    Console.WriteLine("-------------------------------------");
+                    Console.WriteLine("");
                     Console.WriteLine("Ingrese su nombre de usuario");
                     string userName = Console.ReadLine();
                     clientServicesManager = ClientServicesManager.Instance();
@@ -73,7 +79,7 @@ namespace Client
                     string userCreatedResponse = ProtocolDataProgram.Listen(clientSocket);
                     Console.WriteLine(userCreatedResponse);
 
-                    Console.WriteLine("Bienvenido a la plataforma");
+                    Console.WriteLine("Bienvenido a la plataforma, "+userName);
                     string menuOption="";
                     
                     while (menuOption != "8")

@@ -27,7 +27,7 @@ namespace Domain
                 catalogueView += "Titulo: " + game.Title + Environment.NewLine;
                 catalogueView += "Sinopsis: " + game.Synopsis + Environment.NewLine;
                 catalogueView += "Categoría: " + game.Gender + Environment.NewLine;
-                GameCalification calification = GameCalification.PorDefecto;
+                GameCalification calification = GameCalification.Sin_Calificaciones;
                 switch (Math.Truncate(game.RatingAverage))
                 {
                     case 1:

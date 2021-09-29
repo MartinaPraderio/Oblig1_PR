@@ -27,8 +27,8 @@ namespace BusinessLogic
         }
 
         public string PublishGame(Game newGame, Socket clientSocket) {
-                //this.fileCommunication = new FileCommunicationHandler(clientSocket);
-                //fileCommunication.ReceiveFile();
+                this.fileCommunication = new FileCommunicationHandler(clientSocket);
+                fileCommunication.ReceiveFile();
                 this.gameCatalogue.AddGame(newGame);
                 return "Juego agregado con exito";
         }

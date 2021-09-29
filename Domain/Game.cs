@@ -5,11 +5,12 @@ namespace Domain
 {
     public enum GameGender
     {
-        PorDefecto,
+        Otros,
         Aventura,
         Accion,
         Estrategia,
-        Infantil
+        Infantil,
+        Deporte
     }
 
     public class Game

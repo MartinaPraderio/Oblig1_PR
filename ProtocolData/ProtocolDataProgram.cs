@@ -83,11 +83,11 @@ namespace ProtocolData
 
         public static string SerializeGame(Game game)
         {
-            return  game.Title + ProtocolIdentifiers.serializedGameAtributeSeparator +
-                    game.Gender.ToString() + ProtocolIdentifiers.serializedGameAtributeSeparator +
-                    game.Synopsis + ProtocolIdentifiers.serializedGameAtributeSeparator +
-                    game.Cover + ProtocolIdentifiers.serializedGameAtributeSeparator +
-                   ProtocolIdentifiers.userRatingList +SerializeUserRatingList(game.UserRatings);
+            return  game.Title + ProtocolIdentifiers.GameAtributeSeparator +
+                    game.Gender.ToString() + ProtocolIdentifiers.GameAtributeSeparator +
+                    game.Synopsis + ProtocolIdentifiers.GameAtributeSeparator +
+                    game.Cover + ProtocolIdentifiers.GameAtributeSeparator +
+                    SerializeUserRatingList(game.UserRatings);
         }
 
         private static string SerializeUserRatingList(List<UserRating> userRatings)
@@ -95,14 +95,14 @@ namespace ProtocolData
             string serialized = "";
             foreach (UserRating rating in userRatings)
             {
-                serialized += ProtocolIdentifiers.serializedUserRatingSeparator+ SerializeUserRating(rating);
+                serialized += ProtocolIdentifiers.UserRatingSeparator+ SerializeUserRating(rating);
             }
             return serialized;
         }
         private static List<UserRating> DeserializeUserRatingList(string serialized)
         {
             List<UserRating> ratings = new List<UserRating>();
-            string[] serializedRatings = serialized.Split(ProtocolIdentifiers.serializedUserRatingSeparator);
+            string[] serializedRatings = serialized.Split(ProtocolIdentifiers.UserRatingSeparator);
             if (serializedRatings.Length > 1)
             {
                 for (int i = 1; i < serializedRatings.Length; i++)
@@ -116,9 +116,9 @@ namespace ProtocolData
 
         private static UserRating DeserializeUserRating(string serializedRating)
         {
-            string[] ratingInfo = serializedRating.Split(ProtocolIdentifiers.serializedUserRatingAtributeSeparator);
+            string[] ratingInfo = serializedRating.Split(ProtocolIdentifiers.UserRatingAtributeSeparator);
             User aUser = new User(ratingInfo[2]);
-            string review = ratingInfo[1].Split(ProtocolIdentifiers.serializedUserRatingSeparator)[0];
+            string review = ratingInfo[1].Split(ProtocolIdentifiers.UserRatingSeparator)[0];
             UserRating aRating = new UserRating(review, ParseGameCalification(ratingInfo[0]), aUser);
             return aRating;
         }
@@ -131,7 +131,7 @@ namespace ProtocolData
             califications.Add(GameCalification.Medio);
             califications.Add(GameCalification.Bueno);
             califications.Add(GameCalification.Muy_Bueno);
-            GameCalification parsed = GameCalification.PorDefecto;
+            GameCalification parsed = GameCalification.Sin_Calificaciones;
             foreach (GameCalification aCalification in califications)
             {
                 if (aCalification.ToString().Equals(calification))
@@ -144,13 +144,13 @@ namespace ProtocolData
 
         private static string SerializeUserRating(UserRating rating)
         {
-            return rating.Calification + ProtocolIdentifiers.serializedUserRatingAtributeSeparator + rating.Review +
-                ProtocolIdentifiers.serializedUserRatingAtributeSeparator + rating.User.UserName;
+            return rating.Calification + ProtocolIdentifiers.UserRatingAtributeSeparator + rating.Review +
+                ProtocolIdentifiers.UserRatingAtributeSeparator + rating.User.UserName;
         }
 
         public static Game DeserializeGame(string serialized)
         {
-            string[] parseInfo = serialized.Split(ProtocolIdentifiers.serializedGameAtributeSeparator);
+            string[] parseInfo = serialized.Split(ProtocolIdentifiers.GameAtributeSeparator);
             string title = parseInfo[0];
             GameGender gender = ParseGameGender(parseInfo[1]);
             string synopsis = parseInfo[2];
@@ -167,8 +167,9 @@ namespace ProtocolData
             genders.Add(GameGender.Aventura);
             genders.Add(GameGender.Estrategia);
             genders.Add(GameGender.Infantil);
-            genders.Add(GameGender.PorDefecto);
-            GameGender parsed = GameGender.PorDefecto;
+            genders.Add(GameGender.Deporte);
+            genders.Add(GameGender.Otros);
+            GameGender parsed = GameGender.Otros;
             foreach (GameGender aGender in genders)
             {
                 if (aGender.ToString().Equals(gender))
@@ -184,7 +185,7 @@ namespace ProtocolData
             string serialized = "";
             foreach (Game game in games)
             {
-                serialized += ProtocolIdentifiers.serializedGamesSeparator + SerializeGame(game);
+                serialized += ProtocolIdentifiers.GamesSeparator + SerializeGame(game);
             }
             return serialized;
         }
@@ -192,7 +193,7 @@ namespace ProtocolData
         public static List<Game> DeserializeGameList(string games)
         {
             List<Game> deserialized = new List<Game>();
-            string[] serializedGames = games.Split(ProtocolIdentifiers.serializedGamesSeparator);
+            string[] serializedGames = games.Split(ProtocolIdentifiers.GamesSeparator);
             for (int i = 0; i < serializedGames.Length; i++)
             {
                 Game aGame = DeserializeGame(serializedGames[i]);
