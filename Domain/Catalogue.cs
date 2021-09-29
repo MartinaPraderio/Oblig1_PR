@@ -16,16 +16,17 @@ namespace Domain
         {
             this.Games = new List<Game>();
         }
-        public void DisplayGames()
+        public string DisplayGames()
         {
-            Console.WriteLine("Catalogo de juegos: ");
-            Console.WriteLine("");
+            string catalogueView = "";
+            catalogueView += "Catalogo de juegos: " + Environment.NewLine;
+            catalogueView += "" + Environment.NewLine;
 
             foreach (Game game in Games)
             {
-                Console.WriteLine("Titulo: " + game.Title);
-                Console.WriteLine("Sinopsis: " + game.Synopsis);
-                Console.WriteLine("Categoría: " + game.Gender);
+                catalogueView += "Titulo: " + game.Title + Environment.NewLine;
+                catalogueView += "Sinopsis: " + game.Synopsis + Environment.NewLine;
+                catalogueView += "Categoría: " + game.Gender + Environment.NewLine;
                 GameCalification calification = GameCalification.PorDefecto;
                 switch (Math.Truncate(game.RatingAverage))
                 {
@@ -45,13 +46,38 @@ namespace Domain
                         calification = GameCalification.Muy_Bueno;
                         break;
                 }
-                Console.WriteLine("Calificacion media: " + calification.ToString());
-                Console.WriteLine("");
+                catalogueView += "Calificacion media: " + calification.ToString() + Environment.NewLine;
+                catalogueView += "" + Environment.NewLine;
             }
+            return catalogueView;
         }
         public void AddGame(Game aGame)
         {
             this.Games.Add(aGame);
+        }
+
+        public Game FindGame(string gameTitle)
+        {
+            Game aGame = Games.Find(x => x.Title.Equals(gameTitle));
+            return aGame;
+        }
+
+        public List<Game> FindAllGames(GameCalification calif)
+        {
+            List<Game> result = Games.FindAll(x => Math.Truncate(x.RatingAverage).Equals(x.CalificationToInt(calif)));
+            return result;
+        }
+
+        public List<Game> FindAllGamesContaining(string message)
+        {
+            List<Game> result = Games.FindAll(x => x.Title.Contains(message));
+            return result;
+        }
+
+        public List<Game> FindAllGamesByGender(string message)
+        {
+            List<Game> result = Games.FindAll(x => x.Title.Contains(message));
+            return result;
         }
     }
 }

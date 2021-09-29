@@ -11,6 +11,12 @@ namespace Domain
         public User(string username)
         {
             this.UserName = username;
+            this.Games = new List<Game>();
+        }
+
+        public void AddGame(Game aGame)
+        {
+            this.Games.Add(aGame);
         }
     }
 }

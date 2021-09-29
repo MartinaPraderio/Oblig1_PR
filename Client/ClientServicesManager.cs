@@ -2,8 +2,6 @@
 using System.Net.Sockets;
 using Domain;
 using ProtocolData;
-using System.Text.Json;
-using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.IO;
 
@@ -11,21 +9,29 @@ namespace Client
 {
     public class ClientServicesManager
     {
-        private ProtocolDataProgram protocolHandleData;
+        private readonly static ClientServicesManager _instance = new ClientServicesManager();
+        private ProtocolDataProgram protocolHandleData = new ProtocolDataProgram();
 
         private Socket clientSocket;
 
         private string userName;
         private FileCommunicationHandler fileCommunication;
 
-        public ClientServicesManager(Socket client, string userName)
+        public static ClientServicesManager Instance()
         {
-            this.protocolHandleData = new ProtocolDataProgram();
-            this.clientSocket = client;
-            this.userName = userName;
+            return _instance;
+        }
+
+        public void SetSocket(Socket socket)
+        {
+            clientSocket = socket;
         }
 
 
+        public void SetUserName(string user)
+        {
+            userName = user;
+        }
         public void SendMessage(string message, action action)
         {
             ProtocolDataProgram.Send(clientSocket, action.ToString());
@@ -60,16 +66,17 @@ namespace Client
                     genderGame = GameGender.Infantil;
                     break;
             }
+
             Console.WriteLine("Ingrese el path de la caratula del juego");
             string path = Console.ReadLine();
             var fileInfo = new FileInfo(path);
             string fileName = fileInfo.Name;
 
             Game game = new Game(title, genderGame, synopsis, fileName);
-            Console.WriteLine("Nombre del acrhivo: " + fileName);
-            string message = System.Text.Json.JsonSerializer.Serialize(game);
+
+            string message = ProtocolDataProgram.SerializeGame(game);
             SendMessage(message, action.PublishGame);
-           
+
             if (File.Exists(path))
             {
                 Console.WriteLine("Mandando imagen al servidor");
@@ -82,7 +89,6 @@ namespace Client
             Console.WriteLine(response);
         }
 
-        public void EndServerConnection() { }
         public void ModifyGame()
         {
             Console.WriteLine("ingrese el titulo del juego a modificar");
@@ -114,7 +120,7 @@ namespace Client
                     break;
             }
             Game game = new Game(newTitle, genderGame, synopsis, "cover");
-            string message = title + Environment.NewLine + System.Text.Json.JsonSerializer.Serialize(game);
+            string message = title +Environment.NewLine+ ProtocolDataProgram.SerializeGame(game);
             SendMessage(message, action.ModifyGame);
             string response = ProtocolDataProgram.Listen(clientSocket);
             Console.WriteLine(response);
@@ -125,6 +131,18 @@ namespace Client
             string title = Console.ReadLine();
             SendMessage(title, action.DeleteGame);
             string response = ProtocolDataProgram.Listen(clientSocket);
+            Console.WriteLine(response);
+        }
+
+        public void BuyGame()
+        {
+            SendMessage("dummy", action.ViewCatalogue);
+            string response = ProtocolDataProgram.Listen(clientSocket);
+            Console.WriteLine(response);
+            Console.WriteLine("Ingrese el titulo del juego que desea comprar");
+            string title = Console.ReadLine();
+            SendMessage(title, action.BuyGame);
+            response = ProtocolDataProgram.Listen(clientSocket);
             Console.WriteLine(response);
         }
 
@@ -162,21 +180,11 @@ namespace Client
             Console.WriteLine("Ingrese comentario: ");
             string review = Console.ReadLine();
 
-
-            // Le mando el username al server en el message, pero de forma provisoria. Me parece mejor hacer q sea
-            // parte del protocolo, osea que el client para cualquier accion q quiera hacer se identifique mandando
-            // su username. Despues, del lado del server a veces es necesario ver que user nos mando la request y a
-            // veces no. X ej en este caso lo necesitamos para saber de q user es la rating
-            string message = gameTitleToQualify + Environment.NewLine + calification.ToString() + Environment.NewLine + review + Environment.NewLine + userName;
+            string message = gameTitleToQualify + Environment.NewLine + calification.ToString() + Environment.NewLine + review;
             SendMessage(message, action.QualifyGame);
 
             string response = ProtocolDataProgram.Listen(clientSocket);
             Console.WriteLine(response);
-        }
-
-        internal void EndConnection()
-        {
-            SendMessage("", action.EndConnection);
         }
 
         public void GameDetails()
@@ -192,8 +200,7 @@ namespace Client
             }
             else
             {
-
-                Game aGame = JsonConvert.DeserializeObject<Game>(info[1]);
+                Game aGame = ProtocolDataProgram.DeserializeGame(info[1]);
                 Console.WriteLine("Los detalles del juego buscado son:");
                 Console.WriteLine("Titulo: " + aGame.Title);
                 Console.WriteLine("Sinopsis: " + aGame.Synopsis);
@@ -317,7 +324,7 @@ namespace Client
             else
             {
 
-                List<Game> games = JsonConvert.DeserializeObject<List<Game>>(info[1]);
+                List<Game> games = ProtocolDataProgram.DeserializeGameList(info[1]);
                 Console.WriteLine("Los siguientes juegos cumplen con su busqueda");
                 int count = 1;
                 foreach (Game game in games)
@@ -331,11 +338,6 @@ namespace Client
                 }
             }
 
-        }
-
-        internal void SendEmptyMessage()
-        {
-            ProtocolDataProgram.Send(clientSocket, "");
         }
     }
 }

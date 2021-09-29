@@ -2,6 +2,6 @@
   "Server": {
     "IP": "127.0.0.1",
     "ServerPort": 6000,
-    "ClientPort": 6001
+    "ClientPort": 0
   }
 }

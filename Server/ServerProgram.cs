@@ -5,9 +5,8 @@ using System.Threading;
 using BusinessLogic;
 using Microsoft.Extensions.Configuration;
 using ProtocolData;
-using System.Text.Json;
 using Domain;
-using Newtonsoft.Json;
+using System.Collections.Generic;
 
 namespace Server
 {
@@ -16,10 +15,10 @@ namespace Server
 
         private static ServerServicesManager serverServicesManager;
 
+        static bool _exit = false;
+        static List<Socket> _clients = new List<Socket>();
 
-        private const int headerLength = 2;
-        private const int dataLength = 4;
-        /*private static void ListenForConnections(Socket socketServer)
+        private static void ListenForConnections(Socket socketServer)
         {
             while (!_exit)
             {
@@ -27,113 +26,126 @@ namespace Server
                 {
                     var clientConnected = socketServer.Accept();
                     _clients.Add(clientConnected);
-                    var threacClient = new Thread(() => HandleClient(clientConnected));
-                    threacClient.Start();
+                    var threadClient = new Thread(() => HandleClient(clientConnected));
+                    threadClient.Start();
                 }
                 catch (Exception e)
                 {
                     Console.WriteLine(e);
                     _exit = true;
+
                 }
             }
             Console.WriteLine("Exiting....");
-        }*/
-        private static int AcceptClient(Socket serverSocket, int clientCounter)
-        {
-            Console.WriteLine("Esperando por conexiones....");
-            var handler = serverSocket.Accept();
-            Console.WriteLine("Cliente conectado!");
-            new Thread(() => HandleClient(handler)).Start();
-            clientCounter++;
-            return clientCounter;
         }
 
         private static void PrintMenu()
         {
             Console.WriteLine("-----------------------------------");
             Console.WriteLine(" Menu:");
-            Console.WriteLine("1- Aceptar un cliente");
-            Console.WriteLine("2- Ver catalogo de juegos");
-            Console.WriteLine("3- Desconectar servidor");
+            Console.WriteLine("1- Ver catalogo de juegos");
+            Console.WriteLine("2- Desconectar servidor");
             Console.WriteLine("-----------------------------------");
         }
         private static void HandleClient(Socket clientSocket)
         {
-            bool exit = false;
-            while (!exit)
+            bool connected = true;
+            while (connected)
             {
-                string command = ProtocolDataProgram.Listen(clientSocket);
-                string message = ProtocolDataProgram.Listen(clientSocket);
-                switch (command) 
+                try
                 {
-                    case "PublishGame":
-                        {
-                            Game aGame = JsonConvert.DeserializeObject<Game>(message);
-                            string response = serverServicesManager.PublishGame(aGame,clientSocket);
-                            ProtocolDataProgram.Send(clientSocket,response);
-                            break;
-                        }
-                    case "NotifyUsername":
-                        {
-                            User aUser = new User(message);
-                            string response = serverServicesManager.AddUser(aUser);
-                            ProtocolDataProgram.Send(clientSocket, response);
-                            break;
-                        }
-                    case "DeleteGame":
-                        {
-                            string response = serverServicesManager.DeleteGame(message);
-                            ProtocolDataProgram.Send(clientSocket, response);
-                            break;
-                        }
-                    case "ModifyGame":
-                        {
-                            string response = serverServicesManager.ModifyGame(message);
-                            ProtocolDataProgram.Send(clientSocket, response);
-                            break;
-                        }
-                    case "SearchGameByTitle":
-                        {
-                            string response = serverServicesManager.SearchGameByTitle(message);
-                            ProtocolDataProgram.Send(clientSocket, response);
-                            break;
-                        }
-                    case "SearchGameByGender":
-                        {
-                            string response = serverServicesManager.SearchGameByGender(message);
-                            ProtocolDataProgram.Send(clientSocket, response);
-                            break;
-                        }
-                    case "SearchGameByRating":
-                        {
-                            string response = serverServicesManager.SearchGameByRating(message);
-                            ProtocolDataProgram.Send(clientSocket, response);
-                            break;
-                        }
-                    case "QualifyGame":
-                        {
-                            string response = serverServicesManager.QualifyGame(message);
-                            ProtocolDataProgram.Send(clientSocket, response);
-                            break;
-                        }
-                    case "GameDetails":
-                        {
-                            string response = serverServicesManager.GameDetails(message);
-                            ProtocolDataProgram.Send(clientSocket, response);
-                            break;
-                        }
-                    case "EndConnection":
-                        {
-                            exit = true;
-                            break;
-                        }
-                    case "GameCover":
-                        {
-                            string response = serverServicesManager.SendGameCover(message, clientSocket);
-                            ProtocolDataProgram.Send(clientSocket, response);
-                            break;
-                        }
+                    string command = ProtocolDataProgram.Listen(clientSocket);
+                    string message = ProtocolDataProgram.Listen(clientSocket);
+                    switch (command)
+                    {
+                        case "PublishGame":
+                            {
+                                Game aGame = ProtocolDataProgram.DeserializeGame(message);
+                                string response = serverServicesManager.PublishGame(aGame, clientSocket);
+                                ProtocolDataProgram.Send(clientSocket, response);
+                                break;
+                            }
+                        case "NotifyUsername":
+                            {
+                                User aUser = new User(message);
+                                string response = serverServicesManager.AddUser(aUser);
+                                ProtocolDataProgram.Send(clientSocket, response);
+                                break;
+                            }
+                        case "DeleteGame":
+                            {
+                                string response = serverServicesManager.DeleteGame(message);
+                                ProtocolDataProgram.Send(clientSocket, response);
+                                break;
+                            }
+                        case "ModifyGame":
+                            {
+                                string response = serverServicesManager.ModifyGame(message);
+                                ProtocolDataProgram.Send(clientSocket, response);
+                                break;
+                            }
+                        case "SearchGameByTitle":
+                            {
+                                string response = serverServicesManager.SearchGameByTitle(message);
+                                ProtocolDataProgram.Send(clientSocket, response);
+                                break;
+                            }
+                        case "SearchGameByGender":
+                            {
+                                string response = serverServicesManager.SearchGameByGender(message);
+                                ProtocolDataProgram.Send(clientSocket, response);
+                                break;
+                            }
+                        case "SearchGameByRating":
+                            {
+                                string response = serverServicesManager.SearchGameByRating(message);
+                                ProtocolDataProgram.Send(clientSocket, response);
+                                break;
+                            }
+                        case "QualifyGame":
+                            {
+                                string response = serverServicesManager.QualifyGame(message);
+                                ProtocolDataProgram.Send(clientSocket, response);
+                                break;
+                            }
+                        case "GameDetails":
+                            {
+                                string response = serverServicesManager.GameDetails(message);
+                                ProtocolDataProgram.Send(clientSocket, response);
+                                break;
+                            }
+                        case "EndConnection":
+                            {
+                                _exit = true;
+                                break;
+                            }
+                        case "GameCover":
+                            {
+                                string response = serverServicesManager.SendGameCover(message, clientSocket);
+                                ProtocolDataProgram.Send(clientSocket, response);
+                                break;
+                            }
+                        case "ViewCatalogue":
+                            {
+                                string response = serverServicesManager.ViewCatalogue();
+                                ProtocolDataProgram.Send(clientSocket, response);
+                                break;
+                            }
+                        case "BuyGame":
+                            {
+                                string response = serverServicesManager.BuyGame(message);
+                                ProtocolDataProgram.Send(clientSocket, response);
+                                break;
+                            }
+                    
+                    }
                 }
+                catch 
+                {
+                    connected = false;
+
+                }
+                
 
             }
         }
@@ -145,16 +157,13 @@ namespace Server
             var ServerIpAdress = builder["Server:IP"];
             var ServerPort = Int32.Parse(builder["Server:Port"]);
             var Backlog = Int32.Parse(builder["Server:Backlog"]);
-            Console.WriteLine("Soy server"+ ServerIpAdress + ServerPort + Backlog);
             Socket serverSocket = new Socket(
                 AddressFamily.InterNetwork,
                 SocketType.Stream,
                 ProtocolType.Tcp
             );
-            //string ServerIpAdress = "127.0.0.1";
-            //int ServerPort = 2000;
-            //int Backlog = 100;
-            serverServicesManager = new ServerServicesManager(serverSocket);
+            serverServicesManager = ServerServicesManager.Instance();
+            serverServicesManager.SetSocket(serverSocket);
 
             IPEndPoint serverIPEndPoint = new IPEndPoint(IPAddress.Parse(ServerIpAdress),ServerPort);
 
@@ -162,8 +171,8 @@ namespace Server
             {
                 serverSocket.Bind(serverIPEndPoint);
                 serverSocket.Listen(Backlog);
-                int clientCounter = 0;
-                while (true)
+                new Thread(() => ListenForConnections(serverSocket)).Start();
+                while (!_exit)
                 {
                     PrintMenu();
                     string option = Console.ReadLine();
@@ -171,29 +180,25 @@ namespace Server
                     {
                         case "1":
                             {
-                                clientCounter = AcceptClient(serverSocket, clientCounter);
-                                Console.WriteLine("Cantidad de clientes ==> " + clientCounter);
-                                break;
-                            }
-                        case "2":
-                            {
-                                serverServicesManager.ViewCatalogue();
+                                string catalogue = serverServicesManager.ViewCatalogue();
+                                Console.WriteLine(catalogue);
                                 break;
                             }                            
-                        case "3":
+                        case "2":
                             {
+                                _exit = true;
                                 serverSocket.Close(0);
-                                //clientSocket.Shutdown(SocketShutdown.Both);
-                                //clientSocket.Close();
+                                foreach (var client in _clients)
+                                {
+                                    client.Shutdown(SocketShutdown.Both);
+                                    client.Close();
+                                }
                                 Console.WriteLine("Desconectando el servidor!");
                                 break;
                             }
                     }
-                    //new Thread(() => ProtocolDataProgram.Listen(handler)).Start();
                 }
-
             }
-
             catch (SocketException s)
             {
                 Console.WriteLine("Excepcion: " + s.Message + ", Error Code: " + s.ErrorCode + ", Scoket Error Code: " + s.SocketErrorCode);

@@ -29,17 +29,35 @@ namespace Domain
             this.UserRatings = new List<UserRating>();
             this.Synopsis = synopsis;
             this.Cover = cover;
+            UpdateRatingAverage();
+        }
+
+        public Game(string title, GameGender gender, string synopsis, string cover,List<UserRating> ratings)
+        {
+            this.Title = title;
+            this.Gender = gender;
+            this.UserRatings = ratings;
+            this.Synopsis = synopsis;
+            this.Cover = cover;
+            UpdateRatingAverage();
         }
 
         public void AddRating(UserRating rating)
         {
             this.UserRatings.Add(rating);
-            int totalRating = 0;
-            foreach (UserRating aRating in this.UserRatings)
-            {
-                totalRating += CalificationToInt(aRating.Calification);
+            UpdateRatingAverage();
+        }
+
+        private void UpdateRatingAverage()
+        {
+            if(this.UserRatings.Count > 0) {
+                int totalRating = 0;
+                foreach (UserRating aRating in this.UserRatings)
+                {
+                    totalRating += CalificationToInt(aRating.Calification);
+                }
+                this.RatingAverage = totalRating / this.UserRatings.Count;
             }
-            this.RatingAverage = totalRating / this.UserRatings.Count;
         }
 
         public int CalificationToInt(GameCalification calification)

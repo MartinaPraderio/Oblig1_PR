@@ -11,46 +11,9 @@ namespace Client
     class ClientProgram
     {
 
-        private static string ServerIpAdress;
-
-        private static int ServerPort;
-
-        private static string ClientIpAdress;
-
-        private static int ClientPort;
-
-        private static Socket clientSocket;
-
-        private static IPEndPoint clientEndPoint;
-
-        private static IPEndPoint serverIPEndPoint;
 
         private static ClientServicesManager clientServicesManager;
 
-        public static void conectToServer()
-        {
-            clientEndPoint = new IPEndPoint(IPAddress.Parse(ClientIpAdress), ClientPort);
-
-            clientSocket.Bind(clientEndPoint);
-
-            Console.WriteLine("Tratando de conectarse al servidor...");
-
-            serverIPEndPoint = new IPEndPoint(IPAddress.Parse(ServerIpAdress), ServerPort);
-
-            clientSocket.Connect(serverIPEndPoint);
-
-            Console.WriteLine("Cliente conectado al servidor!");
-
-        }
-
-        private static void InitSocket()
-        {
-            clientSocket = new Socket(
-                            AddressFamily.InterNetwork,
-                            SocketType.Stream,
-                            ProtocolType.Tcp
-                        );
-        }
 
         public static void printMenu()
         {
@@ -61,43 +24,59 @@ namespace Client
             Console.WriteLine("4- Buscar juego");
             Console.WriteLine("5- Calificar juego");
             Console.WriteLine("6- Detalle del juego");
-            Console.WriteLine("7 Desconectarse del servidor");
+            Console.WriteLine("7- Adquirir Juego");
+            Console.WriteLine("8 Desconectarse del servidor");
 
         }
 
         static void Main(string[] args)
         {
             IConfiguration builder = new ConfigurationBuilder().AddJsonFile("settings.json", true, true).Build();
-            ServerIpAdress = builder["Server:IP"];
-            ServerPort = Int32.Parse(builder["Server:ServerPort"]);
-            ClientIpAdress = builder["Server:IP"];
-            ClientPort = Int32.Parse(builder["Server:ClientPort"]);
-        InitSocket();
+            string ServerIpAdress = builder["Server:IP"];
+            var ServerPort = Int32.Parse(builder["Server:ServerPort"]);
+            string ClientIpAdress = builder["Server:IP"];
+            var ClientPort = Int32.Parse(builder["Server:ClientPort"]);
             Console.WriteLine("¿Desea conectarse al servidor?");
             Console.WriteLine("Si (Digite 1)");
             Console.WriteLine("No (Digite 2)");
 
             string response = Console.ReadLine();
 
+
             if(response.Equals("1"))
             {
+                Socket clientSocket = new Socket(
+                            AddressFamily.InterNetwork,
+                            SocketType.Stream,
+                            ProtocolType.Tcp
+                        );
                 try
                 {
-                    conectToServer();
+                    
+                    IPEndPoint clientEndPoint = new IPEndPoint(IPAddress.Parse(ClientIpAdress), ClientPort);
+
+                    clientSocket.Bind(clientEndPoint);
+
+                    Console.WriteLine("Tratando de conectarse al servidor...");
+
+                    IPEndPoint serverIPEndPoint = new IPEndPoint(IPAddress.Parse(ServerIpAdress), ServerPort);
+
+                    clientSocket.Connect(serverIPEndPoint);
+
+                    Console.WriteLine("Cliente conectado al servidor!");
                     Console.WriteLine("Ingrese su nombre de usuario");
                     string userName = Console.ReadLine();
-                    clientServicesManager = new ClientServicesManager(clientSocket, userName);
+                    clientServicesManager = ClientServicesManager.Instance();
+                    clientServicesManager.SetSocket(clientSocket);
+                    clientServicesManager.SetUserName(userName);
                     clientServicesManager.SendMessage(userName,action.NotifyUsername);
                     string userCreatedResponse = ProtocolDataProgram.Listen(clientSocket);
                     Console.WriteLine(userCreatedResponse);
 
-                    //ProtocolDataProgram.Send(clientSocket);
-
                     Console.WriteLine("Bienvenido a la plataforma");
                     string menuOption="";
-                    //ClientServicesManager.SendUserName(clientSocket,userName);
                     
-                    while (menuOption != "7")
+                    while (menuOption != "8")
                     {
 
                             printMenu();
@@ -136,12 +115,15 @@ namespace Client
                                         clientServicesManager.GameDetails();
                                         break;
                                     }
-                            case "7":
+                                case "7":
                                     {
-                                        clientServicesManager.EndConnection();
+                                        clientServicesManager.BuyGame();
+                                        break;
+                                    }
+                                case "8":
+                                    {
                                         clientSocket.Shutdown(SocketShutdown.Both);
                                         clientSocket.Close();
-                                        Console.WriteLine("Cliente desconectado del servidor!");
                                         break;
                                     }
                             }
