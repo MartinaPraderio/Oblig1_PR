@@ -4,6 +4,8 @@ using Domain;
 using ProtocolData;
 using System.Collections.Generic;
 using System.IO;
+using System.Net.NetworkInformation;
+using System.Net;
 
 namespace Client
 {
@@ -32,13 +34,24 @@ namespace Client
         {
             userName = user;
         }
-        public void SendMessage(string message, action action)
+        public bool SendMessage(string message, action action)
         {
-            ProtocolDataProgram.Send(clientSocket, action.ToString());
-            ProtocolDataProgram.Send(clientSocket, message);
+            bool ConnectionState = clientSocket.Connected;
+            if (clientSocket.Poll(5000, SelectMode.SelectRead) && (clientSocket.Available == 0))
+            {
+                ConnectionState = false;
+            }
+
+            if (ConnectionState)
+            {
+                ProtocolDataProgram.Send(clientSocket, action.ToString());
+                ProtocolDataProgram.Send(clientSocket, message);
+            }
+            return ConnectionState;
         }
 
-        public void PublishGame()
+
+        public bool PublishGame()
         {
             Console.WriteLine("-----------PUBLICAR JUEGO------------");
             Console.WriteLine("Ingrese el titulo del juego");
@@ -88,7 +101,10 @@ namespace Client
             Game game = new Game(title, genderGame, synopsis, fileName);
 
             string message = ProtocolDataProgram.SerializeGame(game);
-            SendMessage(message, action.PublishGame);
+            
+
+            bool success = SendMessage(message, action.PublishGame); ;
+            if (!success) { return false; }
 
             if (File.Exists(path))
             {
@@ -102,9 +118,10 @@ namespace Client
             string response = ProtocolDataProgram.Listen(clientSocket);
             Console.WriteLine(response);
             Console.WriteLine("-------------------------------------");
+            return true;
         }
 
-        public void ModifyGame()
+        public bool ModifyGame()
         {
             Console.WriteLine("-----------MODIFICAR JUEGO-----------");
             Console.WriteLine("Ingrese el titulo del juego a modificar");
@@ -148,39 +165,47 @@ namespace Client
             }
             Game game = new Game(newTitle, genderGame, synopsis, "cover");
             string message = title +Environment.NewLine+ ProtocolDataProgram.SerializeGame(game);
-            SendMessage(message, action.ModifyGame);
+            bool success = SendMessage(message, action.ModifyGame); ;
+            if (!success) { return false; }
             string response = ProtocolDataProgram.Listen(clientSocket);
             Console.WriteLine(response);
             Console.WriteLine("-------------------------------------");
+            return true;
         }
-        public void DeleteGame()
+        public bool DeleteGame()
         {
             Console.WriteLine("------------ELIMINAR JUEGO------------");
             Console.WriteLine("Ingrese el titulo del juego a eliminar");
             string title = Console.ReadLine();
-            SendMessage(title, action.DeleteGame);
+            bool success = SendMessage(title, action.DeleteGame); ;
+            if (!success) { return false; }
             string response = ProtocolDataProgram.Listen(clientSocket);
             Console.WriteLine(response);
             Console.WriteLine("-------------------------------------");
+            return true;
         }
 
-        public void BuyGame()
+        public bool BuyGame()
         {
             Console.WriteLine("-----------COMPRAR UN JUEGO-----------");
-            SendMessage("Comprar", action.ViewCatalogue);
+            
+            bool success = SendMessage("Comprar", action.ViewCatalogue);
+            if (!success) { return false; }
             string response = ProtocolDataProgram.Listen(clientSocket);
             Console.WriteLine(response);
             Console.WriteLine(" ");
             Console.WriteLine("Ingrese el titulo del juego que desea comprar");
             string title = Console.ReadLine();
             Console.WriteLine("");
-            SendMessage(title, action.BuyGame);
+            success = SendMessage(title, action.BuyGame);
+            if (!success) { return false; }
             response = ProtocolDataProgram.Listen(clientSocket);
             Console.WriteLine(response);
             Console.WriteLine("-------------------------------------");
+            return true;
         }
 
-        public void QualifyGame()
+        public bool QualifyGame()
         {
             Console.WriteLine("---------CALIFICAR UN JUEGO----------");
             Console.WriteLine("Ingrese el titulo del juego a calificar: ");
@@ -217,20 +242,22 @@ namespace Client
             string review = Console.ReadLine();
             Console.WriteLine("");
             string message = gameTitleToQualify + Environment.NewLine + calification.ToString() + Environment.NewLine + review;
-            SendMessage(message, action.QualifyGame);
-
+            bool success = SendMessage(message, action.QualifyGame);
+            if (!success) { return false; }
             string response = ProtocolDataProgram.Listen(clientSocket);
             Console.WriteLine(response);
             Console.WriteLine("-------------------------------------");
+            return true;
         }
 
-        public void GameDetails()
+        public bool GameDetails()
         {
             Console.WriteLine("-------DETALLES DE UN JUEGO----------");
             Console.WriteLine("Ingrese el titulo del juego para ver los detalles");
             string title = Console.ReadLine();
             Console.WriteLine("");
-            SendMessage(title, action.GameDetails);
+            bool success = SendMessage(title, action.GameDetails);
+            if (!success) { return false; }
             string response = ProtocolDataProgram.Listen(clientSocket);
             string[] info = response.Split(Environment.NewLine);
             if (info[0].Equals("N"))
@@ -281,7 +308,8 @@ namespace Client
                 Console.WriteLine("");
                 if (option.Equals("1"))
                 {
-                    SendMessage(aGame.Cover, action.GameCover);
+                    success = SendMessage(aGame.Cover, action.GameCover);
+                    if (!success) { return false; }
                     this.fileCommunication = new FileCommunicationHandler(clientSocket);
                     fileCommunication.ReceiveFile();
                     string responseCover = ProtocolDataProgram.Listen(clientSocket);
@@ -290,19 +318,21 @@ namespace Client
                 }
                 Console.WriteLine("-------------------------------------");
             }
+            return true;
         }
 
-        public void SearchGame()
+        public bool SearchGame()
         {
             Console.WriteLine("----------BUSCAR UN JUEGO------------");
             Console.WriteLine(" Busqueda por: ");
             Console.WriteLine("==> Titulo:      (ingrese 1)");
-            Console.WriteLine("==> Caegoria:    (ingrese 2)");
+            Console.WriteLine("==> Categoria:    (ingrese 2)");
             Console.WriteLine("==> Rating:      (ingrese 3)");
             string searchBy = Console.ReadLine();
             Console.WriteLine("");
             action searchAction = action.Default;
             string searchQuery = "";
+            bool success = true;
             switch (searchBy)
             {
                 case "1":
@@ -310,7 +340,8 @@ namespace Client
                     searchAction = action.SearchGameByTitle;
                     searchQuery = Console.ReadLine();
                     Console.WriteLine("");
-                    SendMessage(searchQuery, searchAction);
+                    success = SendMessage(searchQuery, searchAction);
+                    if (!success) { return false; }
                     break;
                 case "2":
                     Console.WriteLine("Ingrese el genero del juego buscado");
@@ -345,7 +376,8 @@ namespace Client
                             break;
                     }
                     searchAction = action.SearchGameByGender;
-                    SendMessage(genderGame.ToString(), searchAction);
+                    success = SendMessage(genderGame.ToString(), searchAction);
+                    if (!success) { return false; }
                     break;
                 case "3":
                     Console.WriteLine("Ingrese el raiting del juego buscado");
@@ -376,7 +408,8 @@ namespace Client
                             break;
                     }
                     searchAction = action.SearchGameByRating;
-                    SendMessage(calification.ToString(), searchAction);
+                    success = SendMessage(calification.ToString(), searchAction);
+                    if (!success) { return false; }
                     break;
             }
             string response = ProtocolDataProgram.Listen(clientSocket);
@@ -404,7 +437,7 @@ namespace Client
                     count++;
                 }
             }
-
+            return true;
         }
     }
 }

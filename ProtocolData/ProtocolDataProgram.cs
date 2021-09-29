@@ -194,7 +194,8 @@ namespace ProtocolData
         {
             List<Game> deserialized = new List<Game>();
             string[] serializedGames = games.Split(ProtocolIdentifiers.GamesSeparator);
-            for (int i = 0; i < serializedGames.Length; i++)
+
+            for (int i = 1; i < serializedGames.Length; i++)
             {
                 Game aGame = DeserializeGame(serializedGames[i]);
                 deserialized.Add(aGame);

@@ -9,10 +9,11 @@ namespace Client
 {
     class ClientProgram
     {
-
+        private static Socket clientSocket;
 
         private static ClientServicesManager clientServicesManager;
 
+        private string ServerIpAdress;
 
         public static void printMenu()
         {
@@ -50,42 +51,44 @@ namespace Client
                response = Console.ReadLine();
             }
 
-            Socket clientSocket = new Socket(
-                        AddressFamily.InterNetwork,
-                        SocketType.Stream,
-                        ProtocolType.Tcp
-                    );
+            
             try
             {
-                    
-                IPEndPoint clientEndPoint = new IPEndPoint(IPAddress.Parse(ClientIpAdress), ClientPort);
 
-                clientSocket.Bind(clientEndPoint);
-
-                Console.WriteLine("Tratando de conectarse al servidor...");
-
-                IPEndPoint serverIPEndPoint = new IPEndPoint(IPAddress.Parse(ServerIpAdress), ServerPort);
-
-                clientSocket.Connect(serverIPEndPoint);
-
-                Console.WriteLine("Cliente conectado al servidor!");
-                Console.WriteLine("-------------------------------------");
-                Console.WriteLine("");
+                
+                ConnectToServer(ClientIpAdress, ClientPort, ServerIpAdress, ServerPort);
                 Console.WriteLine("Ingrese su nombre de usuario");
                 string userName = Console.ReadLine();
                 clientServicesManager = ClientServicesManager.Instance();
                 clientServicesManager.SetSocket(clientSocket);
                 clientServicesManager.SetUserName(userName);
-                clientServicesManager.SendMessage(userName,action.NotifyUsername);
+                clientServicesManager.SendMessage(userName, action.NotifyUsername);
                 string userCreatedResponse = ProtocolDataProgram.Listen(clientSocket);
                 Console.WriteLine(userCreatedResponse);
 
-                Console.WriteLine("Bienvenido a la plataforma, "+userName);
-                string menuOption="";
-                    
+                Console.WriteLine("Bienvenido a la plataforma, " + userName);
+                string menuOption = "";
+                bool success = true;
                 while (menuOption != "8")
                 {
-
+                    if (!success)
+                    {
+                        Console.WriteLine("---------------/!\\-----------------");
+                        Console.WriteLine("Se perdió la conexión con el servidor.");
+                        success = ConnectToServerInterface(ClientIpAdress, ClientPort, ServerIpAdress, ServerPort);
+                        if (success)
+                        {
+                            Console.WriteLine("Ingrese su nombre de usuario");
+                            userName = Console.ReadLine();
+                            clientServicesManager.SetSocket(clientSocket);
+                            clientServicesManager.SetUserName(userName);
+                            clientServicesManager.SendMessage(userName, action.NotifyUsername);
+                            userCreatedResponse = ProtocolDataProgram.Listen(clientSocket);
+                            Console.WriteLine(userCreatedResponse);
+                        }
+                    }
+                    else
+                    {
                         printMenu();
 
                         menuOption = Console.ReadLine();
@@ -94,37 +97,37 @@ namespace Client
                         {
                             case "1":
                                 {
-                                    clientServicesManager.PublishGame();
+                                    success = clientServicesManager.PublishGame();
                                     break;
                                 }
                             case "2":
                                 {
-                                    clientServicesManager.DeleteGame();
+                                    success = clientServicesManager.DeleteGame();
                                     break;
                                 }
                             case "3":
                                 {
-                                    clientServicesManager.ModifyGame();
+                                    success = clientServicesManager.ModifyGame();
                                     break;
                                 }
                             case "4":
                                 {
-                                    clientServicesManager.SearchGame();
+                                    success = clientServicesManager.SearchGame();
                                     break;
                                 }
                             case "5":
                                 {
-                                    clientServicesManager.QualifyGame();
+                                    success = clientServicesManager.QualifyGame();
                                     break;
                                 }
                             case "6":
                                 {
-                                    clientServicesManager.GameDetails();
+                                    success = clientServicesManager.GameDetails();
                                     break;
                                 }
                             case "7":
                                 {
-                                    clientServicesManager.BuyGame();
+                                    success = clientServicesManager.BuyGame();
                                     break;
                                 }
                             case "8":
@@ -134,6 +137,7 @@ namespace Client
                                     break;
                                 }
                         }
+                    }
                 }
 
             }
@@ -143,6 +147,44 @@ namespace Client
                 Console.WriteLine("Error: " + s.ErrorCode + ", Error Code: " + s.SocketErrorCode);
             }
             
+        }
+
+        private static bool ConnectToServerInterface(string ClientIpAdress, int ClientPort, string ServerIpAdress, int ServerPort)
+        {
+            Console.WriteLine("Ingrese 1 para intentar la conexion.");
+            string option = Console.ReadLine();
+            while (!option.Equals("1"))
+            {
+                option = Console.ReadLine();
+            }
+            bool success = ConnectToServer(ClientIpAdress, ClientPort, ServerIpAdress, ServerPort);
+            return success;
+        }
+
+        private static bool ConnectToServer(string ClientIpAdress, int ClientPort, string ServerIpAdress, int ServerPort)
+        {
+            clientSocket = new Socket(
+                        AddressFamily.InterNetwork,
+                        SocketType.Stream,
+                        ProtocolType.Tcp
+                    );
+            IPEndPoint clientEndPoint = new IPEndPoint(IPAddress.Parse(ClientIpAdress), ClientPort);
+            IPEndPoint serverIPEndPoint = new IPEndPoint(IPAddress.Parse(ServerIpAdress), ServerPort);
+            Console.WriteLine("Tratando de conectarse al servidor...");
+            try
+            {
+                clientSocket.Bind(clientEndPoint);
+                clientSocket.Connect(serverIPEndPoint);
+                Console.WriteLine("Cliente conectado al servidor!");
+                return true;
+            }catch(Exception e)
+            {
+                Console.WriteLine("Falla al intentar conectarse al server");
+                return false;
+            }
+            
+            Console.WriteLine("-------------------------------------");
+            Console.WriteLine("");
         }
     }
 }

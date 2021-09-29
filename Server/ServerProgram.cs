@@ -152,7 +152,6 @@ namespace Server
         static void Main(string[] args)
         {
             IConfiguration builder = new ConfigurationBuilder().AddJsonFile("Settings.json", true, true).Build();
-
             var ServerIpAdress = builder["Server:IP"];
             var ServerPort = Int32.Parse(builder["Server:Port"]);
             var Backlog = Int32.Parse(builder["Server:Backlog"]);

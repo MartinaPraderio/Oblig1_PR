@@ -76,7 +76,7 @@ namespace Domain
 
         public List<Game> FindAllGamesByGender(string message)
         {
-            List<Game> result = Games.FindAll(x => x.Title.Contains(message));
+            List<Game> result = Games.FindAll(x => x.Gender.ToString().Equals(message));
             return result;
         }
     }
