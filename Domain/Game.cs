@@ -84,5 +84,29 @@ namespace Domain
             }
             return result;
         }
+
+        public GameCalification CalculateAverageCalification()
+        {
+            GameCalification calification = GameCalification.Sin_Calificaciones;
+            switch (Math.Truncate(this.RatingAverage))
+            {
+                case 1:
+                    calification = GameCalification.Muy_Malo;
+                    break;
+                case 2:
+                    calification = GameCalification.Malo;
+                    break;
+                case 3:
+                    calification = GameCalification.Medio;
+                    break;
+                case 4:
+                    calification = GameCalification.Bueno;
+                    break;
+                case 5:
+                    calification = GameCalification.Muy_Bueno;
+                    break;
+            }
+            return calification;
+        }
     }
 }

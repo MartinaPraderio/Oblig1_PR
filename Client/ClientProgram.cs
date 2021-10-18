@@ -25,8 +25,10 @@ namespace Client
             Console.WriteLine("4 - Buscar juego");
             Console.WriteLine("5 - Calificar juego");
             Console.WriteLine("6 - Detalle del juego");
-            Console.WriteLine("7 - Adquirir Juego");
-            Console.WriteLine("8 - Desconectarse del servidor");
+            Console.WriteLine("7 - Adquirir un juego");
+            Console.WriteLine("8 - Ver mis juegos");
+            Console.WriteLine("9 - Desconectarse del servidor");
+            Console.WriteLine("10 - Cerrar sesion");
             Console.WriteLine("-------------------------------------");
             Console.WriteLine("");
 
@@ -55,22 +57,28 @@ namespace Client
             try
             {
 
-                
                 ConnectToServer(ClientIpAdress, ClientPort, ServerIpAdress, ServerPort);
-                Console.WriteLine("Ingrese su nombre de usuario");
-                string userName = Console.ReadLine();
-                clientServicesManager = ClientServicesManager.Instance();
-                clientServicesManager.SetSocket(clientSocket);
-                clientServicesManager.SetUserName(userName);
-                clientServicesManager.SendMessage(userName, action.NotifyUsername);
-                string userCreatedResponse = ProtocolDataProgram.Listen(clientSocket);
-                Console.WriteLine(userCreatedResponse);
-
-                Console.WriteLine("Bienvenido a la plataforma, " + userName);
+                
                 string menuOption = "";
                 bool success = true;
-                while (menuOption != "8")
+                bool logged = false;
+                while (menuOption != "9")
                 {
+                    while (!logged) {
+                        clientServicesManager = ClientServicesManager.Instance();
+                        clientServicesManager.SetSocket(clientSocket);
+                        Console.WriteLine("Ingrese su nombre de usuario");
+                        string userName = Console.ReadLine();
+                        clientServicesManager.SendMessage(userName, action.NotifyUsername);
+                        string userCreatedResponse = ProtocolDataProgram.Listen(clientSocket);
+                        Console.WriteLine(userCreatedResponse);
+                        if(userCreatedResponse.Equals("Login exitoso"))
+                        {
+                            clientServicesManager.SetUserName(userName);   
+                            logged = true;
+                        }
+                    }
+
                     if (!success)
                     {
                         Console.WriteLine("---------------/!\\-----------------");
@@ -79,11 +87,11 @@ namespace Client
                         if (success)
                         {
                             Console.WriteLine("Ingrese su nombre de usuario");
-                            userName = Console.ReadLine();
+                            string userName = Console.ReadLine();
                             clientServicesManager.SetSocket(clientSocket);
                             clientServicesManager.SetUserName(userName);
                             clientServicesManager.SendMessage(userName, action.NotifyUsername);
-                            userCreatedResponse = ProtocolDataProgram.Listen(clientSocket);
+                            string userCreatedResponse = ProtocolDataProgram.Listen(clientSocket);
                             Console.WriteLine(userCreatedResponse);
                         }
                     }
@@ -132,8 +140,20 @@ namespace Client
                                 }
                             case "8":
                                 {
+                                    success = clientServicesManager.ViewUserGames();
+                                    break;
+                                }
+                            case "9":
+                                {
                                     clientSocket.Shutdown(SocketShutdown.Both);
                                     clientSocket.Close();
+                                    break;
+                                }
+                            case "10":
+                                {
+                                    logged = false;
+                                    Console.WriteLine("Se cerró la sesión correctamente");
+                                    clientServicesManager.SetUserName("");
                                     break;
                                 }
                         }

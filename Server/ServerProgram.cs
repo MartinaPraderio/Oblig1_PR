@@ -44,6 +44,10 @@ namespace Server
             Console.WriteLine(" Menu:");
             Console.WriteLine("1- Ver catalogo de juegos");
             Console.WriteLine("2- Desconectar servidor");
+            Console.WriteLine("3- Crear usuario");
+            Console.WriteLine("4- Modificar usuario");
+            Console.WriteLine("5- Eliminar usuario");
+            Console.WriteLine("6- Ver lista de usuarios");
             Console.WriteLine("-----------------------------------");
         }
         private static void HandleClient(Socket clientSocket)
@@ -66,8 +70,7 @@ namespace Server
                             }
                         case "NotifyUsername":
                             {
-                                User aUser = new User(message);
-                                string response = serverServicesManager.AddUser(aUser);
+                                string response = serverServicesManager.Login(message);
                                 ProtocolDataProgram.Send(clientSocket, response);
                                 break;
                             }
@@ -136,7 +139,12 @@ namespace Server
                                 ProtocolDataProgram.Send(clientSocket, response);
                                 break;
                             }
-                    
+                        case "ViewUserGames":
+                            {
+                                string response = serverServicesManager.ShowUserGames(message);
+                                ProtocolDataProgram.Send(clientSocket, response);
+                                break;
+                            }
                     }
                 }
                 catch 
@@ -175,6 +183,7 @@ namespace Server
                     if (inicio)
                     {
                         Console.WriteLine("Si desea iniciar la aplicacion con datos de prueba ingrese 1");
+                        Console.WriteLine("De lo contrario ingrese cualquier caracter");
                         string response = Console.ReadLine();
                         Console.WriteLine("");
                         if (response.Equals("1"))
@@ -210,6 +219,34 @@ namespace Server
                                     client.Close();
                                 }
                                 Console.WriteLine("Desconectando el servidor!");
+                                break;
+                            }
+                        case "3":
+                            {
+                                Console.WriteLine("Ingrese el nombre del nuevo usuario");
+                                String name = Console.ReadLine();
+                                User newUser = new User(name);
+                                serverServicesManager.AddUser(newUser);
+                                Console.WriteLine("El usuario "+name+" fue registrado con exito.");
+                                break;
+                            }
+                        case "4":
+                            {
+                                Console.WriteLine("Ingrese el nombre del usuario a modificar");
+                                String name = Console.ReadLine();
+                                serverServicesManager.ModifyUser(name);
+                                break;
+                            }
+                        case "5":
+                            {
+                                Console.WriteLine("Ingrese el nombre del usuario a eliminar");
+                                String name = Console.ReadLine();
+                                serverServicesManager.DeleteUser(name);
+                                break;
+                            }
+                        case "6":
+                            {
+                                serverServicesManager.ShowUsers();
                                 break;
                             }
                     }

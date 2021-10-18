@@ -19,7 +19,9 @@ namespace ProtocolData
         GameDetails,
         GameCover,
         ViewCatalogue,
-        BuyGame
+        BuyGame,
+        LogOut,
+        ViewUserGames
     }
 
     public class ProtocolDataProgram

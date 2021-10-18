@@ -12,7 +12,6 @@ namespace Server
         private readonly static ServerServicesManager _instance = new ServerServicesManager();
         private Catalogue gameCatalogue = Catalogue.Instance;
         private List<User> users = new List<User>();
-        private User loggedUser;
         private Socket serverSocket;
         FileCommunicationHandler fileCommunication;
 
@@ -65,7 +64,6 @@ namespace Server
             lock (this.users)
             {
                 this.users.Add(newUser);
-                this.loggedUser = newUser;
             }
             return "Usuario agragado con exito";
         }
@@ -90,6 +88,20 @@ namespace Server
             }
         }
 
+        public string Login(string message)
+        {
+            string response = "";
+            if(this.users.Find(x => x.UserName.Equals(message)) != null)
+            {
+                response = "Login exitoso";
+            }
+            else
+            {
+                response = "El usuario que ingresó no existe";
+            }
+            return response;
+        }
+
         public string ModifyGame(string message)
         {
             string[] info = message.Split(Environment.NewLine);
@@ -100,18 +112,12 @@ namespace Server
                 string response = "";
                 if (aGame != null)
                 {
-                    Console.WriteLine("titulo viejo: " + aGame.Title);
                     Game newGameValues = ProtocolDataProgram.DeserializeGame(info[1]);
 
                     aGame.Title = newGameValues.Title;
                     aGame.Gender = newGameValues.Gender;
                     aGame.Synopsis = newGameValues.Synopsis;
                     response = "El juego fue modificado.";
-
-                    foreach (Game g in gameCatalogue.Games)
-                    {
-                        Console.WriteLine(g.Title);
-                    }
                 }
                 else
                 {
@@ -182,16 +188,18 @@ namespace Server
         public string QualifyGame(string message)
         {
             string[] info = message.Split(Environment.NewLine);
-            string gameTitle = info[0];
-            GameCalification calification = ProtocolDataProgram.ParseGameCalification(info[1]);
-            string review = info[2];
+            string userName = info[0];
+            string gameTitle = info[1];
+            GameCalification calification = ProtocolDataProgram.ParseGameCalification(info[2]);
+            string review = info[3];
             lock (this.gameCatalogue.Games)
             {
                 Game gameToQualify = gameCatalogue.FindGame(gameTitle);
                 string addRatingResponse = "";
                 if (gameToQualify != null)
                 {
-                    UserRating newRating = new UserRating(review, calification, loggedUser);
+                    User reviewer = this.users.Find(x => x.UserName.Equals(userName));
+                    UserRating newRating = new UserRating(review, calification, reviewer);
                     gameToQualify.AddRating(newRating);
                     addRatingResponse = "Su review fue publicada con exito.";
                 }
@@ -204,15 +212,41 @@ namespace Server
             }
         }
 
+        public string ShowUserGames(string message)
+        {
+            string response = "Lista de juegos:"+ Environment.NewLine;
+            lock (this.users)
+            {
+                User aUser = this.users.Find(x => x.UserName.Equals(message));
+                foreach (Game aGame in aUser.Games)
+                {
+                    response += "-------------------"+ Environment.NewLine;
+                    response += "Nombre: " +aGame.Title+ Environment.NewLine;
+                    response += "Genero: " + aGame.Gender + Environment.NewLine;
+                    response += "Calificacion: " + aGame.CalculateAverageCalification() + Environment.NewLine;
+                }
+            }
+            return response;
+        }
+
         public string BuyGame(string message)
         {
+            string[] info = message.Split(Environment.NewLine);
+            string buyerName = info[0];
+            string gameName = info[1];
             lock (this.gameCatalogue.Games)
             {
                 string response = "";
-                Game requestedGame = gameCatalogue.FindGame(message);
+                
+
+                Game requestedGame = gameCatalogue.FindGame(gameName);
                 if (requestedGame != null)
                 {
-                    loggedUser.AddGame(requestedGame);
+                    lock (this.users)
+                    {
+                        User buyer = this.users.Find(x => x.UserName.Equals(buyerName));
+                        buyer.AddGame(requestedGame);
+                    }
                     response = "Su compra ha finalizado con exito";
                 }
                 else
@@ -248,6 +282,47 @@ namespace Server
                 gameCatalogue.AddGame(new Game("Call of duty Prueba", GameGender.Accion, "Shooter", "COD.jpg"));
                 gameCatalogue.AddGame(new Game("Mario Bros", GameGender.Aventura, "juego de nintendo", "mario.jpg"));
             }
+        }
+
+        public void ModifyUser(string name)
+        {
+            User aUser = this.users.Find(x => x.UserName.Equals(name));
+            if (aUser!= null)
+            {
+                Console.WriteLine("Ingrese el nuevo nombre de usuario");
+                string newName = Console.ReadLine();
+                aUser.UserName = newName;
+                Console.WriteLine("El usuario fue modificado con exito.");
+            }
+            else
+            {
+                Console.WriteLine("El usuario que intenta modificar no existe.");
+            }
+        }
+
+        public void DeleteUser(string name)
+        {
+            User aUser = this.users.Find(x => x.UserName.Equals(name));
+            if (aUser != null)
+            {
+                this.users.Remove(aUser);
+                Console.WriteLine("El usuario fue eliminado con exito.");
+            }
+            else
+            {
+                Console.WriteLine("El usuario que intenta eliminar no existe.");
+            }
+        }
+
+        public void ShowUsers()
+        {
+            Console.WriteLine("Usuarios registrados en el sistema:");
+            Console.WriteLine("");
+            foreach (User user in this.users)
+            {
+                Console.WriteLine(user.UserName);
+            }
+            Console.WriteLine("-----------------------------------");
         }
     }
 }

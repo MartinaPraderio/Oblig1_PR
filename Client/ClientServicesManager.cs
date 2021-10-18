@@ -103,8 +103,7 @@ namespace Client
             string message = ProtocolDataProgram.SerializeGame(game);
             
 
-            bool success = SendMessage(message, action.PublishGame); ;
-            if (!success) { return false; }
+            
 
             if (File.Exists(path))
             {
@@ -113,10 +112,17 @@ namespace Client
                 var fileCommunication = new FileCommunicationHandler(clientSocket);
                 fileCommunication.SendFile(path);
                 Console.WriteLine("Se termino de mandar la imagen al servidor");
+                bool success = SendMessage(message, action.PublishGame);
+                if (!success) { return false; }
+                string response = ProtocolDataProgram.Listen(clientSocket);
+                Console.WriteLine(response);
+            }
+            else
+            {
+                Console.WriteLine("La ruta que ingresó no existe");
             }
             Console.WriteLine("");
-            string response = ProtocolDataProgram.Listen(clientSocket);
-            Console.WriteLine(response);
+            
             Console.WriteLine("-------------------------------------");
             return true;
         }
@@ -172,6 +178,16 @@ namespace Client
             Console.WriteLine("-------------------------------------");
             return true;
         }
+
+        internal bool ViewUserGames()
+        {
+            bool success = SendMessage(this.userName, action.ViewUserGames);
+            string response = ProtocolDataProgram.Listen(clientSocket);
+            Console.WriteLine(response);
+            Console.WriteLine("-------------------------------------");
+            return success;
+        }
+
         public bool DeleteGame()
         {
             Console.WriteLine("------------ELIMINAR JUEGO------------");
@@ -195,9 +211,10 @@ namespace Client
             Console.WriteLine(response);
             Console.WriteLine(" ");
             Console.WriteLine("Ingrese el titulo del juego que desea comprar");
-            string title = Console.ReadLine();
             Console.WriteLine("");
-            success = SendMessage(title, action.BuyGame);
+            string title = Console.ReadLine();
+            string message = this.userName + Environment.NewLine + title;
+            success = SendMessage(message, action.BuyGame);
             if (!success) { return false; }
             response = ProtocolDataProgram.Listen(clientSocket);
             Console.WriteLine(response);
@@ -241,7 +258,7 @@ namespace Client
             Console.WriteLine("Ingrese un comentario: ");
             string review = Console.ReadLine();
             Console.WriteLine("");
-            string message = gameTitleToQualify + Environment.NewLine + calification.ToString() + Environment.NewLine + review;
+            string message = this.userName +Environment.NewLine+gameTitleToQualify + Environment.NewLine + calification.ToString() + Environment.NewLine + review;
             bool success = SendMessage(message, action.QualifyGame);
             if (!success) { return false; }
             string response = ProtocolDataProgram.Listen(clientSocket);
@@ -271,25 +288,7 @@ namespace Client
                 Console.WriteLine("Titulo:          " + aGame.Title);
                 Console.WriteLine("Sinopsis:        " + aGame.Synopsis);
                 Console.WriteLine("Categoría:       " + aGame.Gender);
-                GameCalification calification = GameCalification.Sin_Calificaciones;
-                switch (Math.Truncate(aGame.RatingAverage))
-                {
-                    case 1:
-                        calification = GameCalification.Muy_Malo;
-                        break;
-                    case 2:
-                        calification = GameCalification.Malo;
-                        break;
-                    case 3:
-                        calification = GameCalification.Medio;
-                        break;
-                    case 4:
-                        calification = GameCalification.Bueno;
-                        break;
-                    case 5:
-                        calification = GameCalification.Muy_Bueno;
-                        break;
-                }
+                GameCalification calification = aGame.CalculateAverageCalification();
                 Console.WriteLine("Calificacion media: " + calification.ToString());
                 Console.WriteLine("");
                 Console.WriteLine("Listado de calificaciones: ");
@@ -310,6 +309,7 @@ namespace Client
                 {
                     success = SendMessage(aGame.Cover, action.GameCover);
                     if (!success) { return false; }
+
                     this.fileCommunication = new FileCommunicationHandler(clientSocket);
                     fileCommunication.ReceiveFile();
                     string responseCover = ProtocolDataProgram.Listen(clientSocket);
