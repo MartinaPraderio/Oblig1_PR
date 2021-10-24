@@ -8,11 +8,11 @@ namespace ProtocolData
     public class FileCommunicationHandler
     {
         private readonly FileStreamHandler _fileStreamHandler;
-        private readonly SocketStreamHandler _socketStreamHandler;
+        private readonly NetworkStreamHandler _networkStreamHandler;
 
-        public FileCommunicationHandler(Socket socket)
+        public FileCommunicationHandler(TcpClient tcpClient)
         {
-            _socketStreamHandler = new SocketStreamHandler(socket);
+            _networkStreamHandler = new NetworkStreamHandler(tcpClient.GetStream());
             _fileStreamHandler = new FileStreamHandler();
         }
 
@@ -24,14 +24,14 @@ namespace ProtocolData
             int fileNameLength = fileNameData.Length;
             byte[] fileNameLengthData = BitConverter.GetBytes(fileNameLength);
             // 1.- Envío el largo del nombre del archivo
-            _socketStreamHandler.SendData(fileNameLengthData);
+            _networkStreamHandler.SendData(fileNameLengthData);
             // 2.- Envío el nombre del archivo
-            _socketStreamHandler.SendData(fileNameData);
+            _networkStreamHandler.SendData(fileNameData);
 
             long fileSize = fileInfo.Length;
             byte[] fileSizeDataLength = BitConverter.GetBytes(fileSize);
             // 3.- Envío el largo del archivo
-            _socketStreamHandler.SendData(fileSizeDataLength);
+            _networkStreamHandler.SendData(fileSizeDataLength);
             // 4.- Envío los datos del archivo
             SendFile(fileSize, path);
         }
@@ -39,16 +39,15 @@ namespace ProtocolData
         public void ReceiveFile()
         {
             // 1.- Recibir el largo del nombre del archivo
-            byte[] fileNameLengthData = _socketStreamHandler.ReceiveData(ProtocolSpecification.FileNameSize);
+            byte[] fileNameLengthData = _networkStreamHandler.ReadData(ProtocolSpecification.FileNameSize);
             int fileNameLength = BitConverter.ToInt32(fileNameLengthData);
             // 2.- Recibir el nombre del archivo
-            byte[] fileNameData = _socketStreamHandler.ReceiveData(fileNameLength);
+            byte[] fileNameData = _networkStreamHandler.ReadData(fileNameLength);
             string fileName = Encoding.UTF8.GetString(fileNameData);
 
             // 3.- Recibo el largo del archivo
-            byte[] fileSizeDataLength = _socketStreamHandler.ReceiveData(ProtocolSpecification.FileSize);
+            byte[] fileSizeDataLength = _networkStreamHandler.ReadData(ProtocolSpecification.FileSize);
             long fileSize = BitConverter.ToInt64(fileSizeDataLength);
-            // 4.- Recibo los datos del archivo
             ReceiveFile(fileSize, fileName);
         }
 
@@ -73,7 +72,7 @@ namespace ProtocolData
                     offset += lastPartSize;
                 }
 
-                _socketStreamHandler.SendData(data);
+                _networkStreamHandler.SendData(data);
                 currentPart++;
             }
         }
@@ -88,13 +87,13 @@ namespace ProtocolData
                 byte[] data;
                 if (currentPart != fileParts)
                 {
-                    data = _socketStreamHandler.ReceiveData(ProtocolSpecification.MaxPacketSize);
+                    data = _networkStreamHandler.ReadData(ProtocolSpecification.MaxPacketSize);
                     offset += ProtocolSpecification.MaxPacketSize;
                 }
                 else
                 {
                     int lastPartSize = (int)(fileSize - offset);
-                    data = _socketStreamHandler.ReceiveData(lastPartSize);
+                    data = _networkStreamHandler.ReadData(lastPartSize);
                     offset += lastPartSize;
                 }
                 _fileStreamHandler.WriteData(fileName, data);

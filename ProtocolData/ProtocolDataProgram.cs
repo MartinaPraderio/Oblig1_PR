@@ -30,7 +30,7 @@ namespace ProtocolData
         public ProtocolDataProgram() { }
         private const int ProtocolFixedSize = 4;
 
-        public static void Send(Socket socket, string message)
+        public static void Send(NetworkStream networkStream, string message)
         {    
                 //2 Codifico el mensaje a bytes
                 byte[] data = Encoding.UTF8.GetBytes(message);
@@ -41,26 +41,32 @@ namespace ProtocolData
                 byte[] dataLength = BitConverter.GetBytes(length);
 
                 //5 Envío el largo en bytes
-                SendBatch(socket, dataLength);
+                SendBatch(networkStream, dataLength);
 
                 //6 Envío el mensaje
-                SendBatch(socket, data);
+                SendBatch(networkStream, data);
             
         }
 
-        public static string Listen(Socket socket)
+        public static string Listen(NetworkStream networkStream)
         {
             string dataString = "";
             //1 Creo la parte fija del protocolo
             byte[] dataLength = new byte[ProtocolFixedSize];
             //2 Recibo los datos fijos
-            socket.Receive(dataLength);
+
+            //tcpClient.Receive(dataLength); //ver como hacer esto
+            networkStream.Read(dataLength);
+
             //3 Interpreto dichos bytes para obtener cuanto serán los datos variables
             int length = BitConverter.ToInt32(dataLength);
             //4 Creo que el buffer del tamaño exacto de el mensaje que va a venir
             byte[] data = new byte[length];
             //5 Recibo el mensaje (largo variable, que ahora se que es length)
-            socket.Receive(data);
+
+            //tcpClient.Receive(data);  //ver como hacer esto
+            networkStream.Read(data);
+
             //6 Convierto los datos a string
             string message = Encoding.UTF8.GetString(data);
             //7 Uso los datos
@@ -68,19 +74,21 @@ namespace ProtocolData
             return dataString;
         }
 
-        private static void SendBatch(Socket socket, byte[] data)
+        private static void SendBatch(NetworkStream networkStream , byte[] data)
         {
-            int totalDataSent = 0;
+            /* int totalDataSent = 0;
 
-            while (totalDataSent < data.Length)
-            {
-                int sent = socket.Send(data, totalDataSent, data.Length - totalDataSent, SocketFlags.None);
-                if (sent == 0)
-                {
-                    throw new SocketException();
-                }
-                totalDataSent += sent;
-            }
+             while (totalDataSent < data.Length)
+             {
+                 int sent = tcpClient.Send(data, totalDataSent, data.Length - totalDataSent, SocketFlags.None); //ver como hacer esto con tcp
+                 if (sent == 0)
+                 {
+                     throw new SocketException();
+                 }
+                 //totalDataSent += sent;
+             }*/
+            networkStream.WriteAsync(data, 0, data.Length);
+
         }
 
         public static string SerializeGame(Game game)

@@ -7,9 +7,9 @@ using Microsoft.Extensions.Configuration;
 
 namespace Client
 {
-    class ClientProgram
+    public class ClientProgram
     {
-        private static Socket clientSocket;
+        private static TcpClient _tcpClient;
 
         private static ClientServicesManager clientServicesManager;
 
@@ -34,7 +34,7 @@ namespace Client
 
         }
 
-        static void Main(string[] args)
+        public static void Main(string[] args)
         {
             IConfiguration builder = new ConfigurationBuilder().AddJsonFile("Settings.json", true, true).Build();
             string ServerIpAdress = builder["Server:IP"];
@@ -66,11 +66,11 @@ namespace Client
                 {
                     while (!logged) {
                         clientServicesManager = ClientServicesManager.Instance();
-                        clientServicesManager.SetSocket(clientSocket);
+                        clientServicesManager.SetTcpClient(_tcpClient);
                         Console.WriteLine("Ingrese su nombre de usuario");
                         string userName = Console.ReadLine();
                         clientServicesManager.SendMessage(userName, action.NotifyUsername);
-                        string userCreatedResponse = ProtocolDataProgram.Listen(clientSocket);
+                        string userCreatedResponse = ProtocolDataProgram.Listen(_tcpClient);
                         Console.WriteLine(userCreatedResponse);
                         if(userCreatedResponse.Equals("Login exitoso"))
                         {
@@ -88,10 +88,10 @@ namespace Client
                         {
                             Console.WriteLine("Ingrese su nombre de usuario");
                             string userName = Console.ReadLine();
-                            clientServicesManager.SetSocket(clientSocket);
+                            clientServicesManager.SetTcpClient(_tcpClient);
                             clientServicesManager.SetUserName(userName);
                             clientServicesManager.SendMessage(userName, action.NotifyUsername);
-                            string userCreatedResponse = ProtocolDataProgram.Listen(clientSocket);
+                            string userCreatedResponse = ProtocolDataProgram.Listen(_tcpClient);
                             Console.WriteLine(userCreatedResponse);
                         }
                     }
@@ -145,8 +145,8 @@ namespace Client
                                 }
                             case "9":
                                 {
-                                    clientSocket.Shutdown(SocketShutdown.Both);
-                                    clientSocket.Close();
+                                    _tcpClient.GetStream().Close();
+                                    _tcpClient.Close();
                                     break;
                                 }
                             case "10":
@@ -183,21 +183,17 @@ namespace Client
 
         private static bool ConnectToServer(string ClientIpAdress, int ClientPort, string ServerIpAdress, int ServerPort)
         {
-            clientSocket = new Socket(
-                        AddressFamily.InterNetwork,
-                        SocketType.Stream,
-                        ProtocolType.Tcp
-                    );
             IPEndPoint clientEndPoint = new IPEndPoint(IPAddress.Parse(ClientIpAdress), ClientPort);
-            IPEndPoint serverIPEndPoint = new IPEndPoint(IPAddress.Parse(ServerIpAdress), ServerPort);
+            IPEndPoint serverIPEndPoint  = new IPEndPoint(IPAddress.Parse(ServerIpAdress), ServerPort);
             Console.WriteLine("Tratando de conectarse al servidor...");
             try
             {
-                clientSocket.Bind(clientEndPoint);
-                clientSocket.Connect(serverIPEndPoint);
+                _tcpClient = new TcpClient(clientEndPoint);
+                _tcpClient.Connect(serverIPEndPoint);
                 Console.WriteLine("Cliente conectado al servidor!");
                 return true;
-            }catch(Exception e)
+            }
+            catch(Exception e)
             {
                 Console.WriteLine("Falla al intentar conectarse al server");
                 return false;

@@ -11,22 +11,21 @@ namespace Server
 {
     public class ServerProgram
     {
-
+        private static TcpListener _tcpListener;
         private static ServerServicesManager serverServicesManager;
 
         static bool _exit = false;
-        static List<Socket> _clients = new List<Socket>();
+        static List<TcpClient> _clients = new List<TcpClient>();
 
-        private static void ListenForConnections(Socket socketServer)
+        private static void ListenForConnections(TcpListener tcpListener) //ver si recibo eso o tcpClient y con lo de networkStteamHandler
         {
             while (!_exit)
             {
                 try
                 {
-                    var clientConnected = socketServer.Accept();
+                    var clientConnected = tcpListener.AcceptTcpClient(); //ver si es este o AcceptTcpClientAsync
                     _clients.Add(clientConnected);
-                    var threadClient = new Thread(() => HandleClient(clientConnected));
-                    threadClient.Start();
+                    HandleClient(clientConnected);
                 }
                 catch (Exception e)
                 {
@@ -50,70 +49,70 @@ namespace Server
             Console.WriteLine("6- Ver lista de usuarios");
             Console.WriteLine("-----------------------------------");
         }
-        private static void HandleClient(Socket clientSocket)
+        private static void HandleClient(TcpClient tcpClient)
         {
             bool connected = true;
             while (connected)
             {
                 try
                 {
-                    string command = ProtocolDataProgram.Listen(clientSocket);
-                    string message = ProtocolDataProgram.Listen(clientSocket);
+                    string command = ProtocolDataProgram.Listen(tcpClient);
+                    string message = ProtocolDataProgram.Listen(tcpClient);
                     switch (command)
                     {
                         case "PublishGame":
                             {
                                 Game aGame = ProtocolDataProgram.DeserializeGame(message);
-                                string response = serverServicesManager.PublishGame(aGame, clientSocket);
-                                ProtocolDataProgram.Send(clientSocket, response);
+                                string response = serverServicesManager.PublishGame(aGame, tcpClient);
+                                ProtocolDataProgram.Send(tcpClient, response);
                                 break;
                             }
                         case "NotifyUsername":
                             {
                                 string response = serverServicesManager.Login(message);
-                                ProtocolDataProgram.Send(clientSocket, response);
+                                ProtocolDataProgram.Send(tcpClient, response);
                                 break;
                             }
                         case "DeleteGame":
                             {
                                 string response = serverServicesManager.DeleteGame(message);
-                                ProtocolDataProgram.Send(clientSocket, response);
+                                ProtocolDataProgram.Send(tcpClient, response);
                                 break;
                             }
                         case "ModifyGame":
                             {
                                 string response = serverServicesManager.ModifyGame(message);
-                                ProtocolDataProgram.Send(clientSocket, response);
+                                ProtocolDataProgram.Send(tcpClient, response);
                                 break;
                             }
                         case "SearchGameByTitle":
                             {
                                 string response = serverServicesManager.SearchGameByTitle(message);
-                                ProtocolDataProgram.Send(clientSocket, response);
+                                ProtocolDataProgram.Send(tcpClient, response);
                                 break;
                             }
                         case "SearchGameByGender":
                             {
                                 string response = serverServicesManager.SearchGameByGender(message);
-                                ProtocolDataProgram.Send(clientSocket, response);
+                                ProtocolDataProgram.Send(tcpClient, response);
                                 break;
                             }
                         case "SearchGameByRating":
                             {
                                 string response = serverServicesManager.SearchGameByRating(message);
-                                ProtocolDataProgram.Send(clientSocket, response);
+                                ProtocolDataProgram.Send(tcpClient, response);
                                 break;
                             }
                         case "QualifyGame":
                             {
                                 string response = serverServicesManager.QualifyGame(message);
-                                ProtocolDataProgram.Send(clientSocket, response);
+                                ProtocolDataProgram.Send(tcpClient, response);
                                 break;
                             }
                         case "GameDetails":
                             {
                                 string response = serverServicesManager.GameDetails(message);
-                                ProtocolDataProgram.Send(clientSocket, response);
+                                ProtocolDataProgram.Send(tcpClient, response);
                                 break;
                             }
                         case "EndConnection":
@@ -123,26 +122,26 @@ namespace Server
                             }
                         case "GameCover":
                             {
-                                string response = serverServicesManager.SendGameCover(message, clientSocket);
-                                ProtocolDataProgram.Send(clientSocket, response);
+                                string response = serverServicesManager.SendGameCover(message, tcpClient);
+                                ProtocolDataProgram.Send(tcpClient, response);
                                 break;
                             }
                         case "ViewCatalogue":
                             {
                                 string response = serverServicesManager.ViewCatalogue();
-                                ProtocolDataProgram.Send(clientSocket, response);
+                                ProtocolDataProgram.Send(tcpClient, response);
                                 break;
                             }
                         case "BuyGame":
                             {
                                 string response = serverServicesManager.BuyGame(message);
-                                ProtocolDataProgram.Send(clientSocket, response);
+                                ProtocolDataProgram.Send(tcpClient, response);
                                 break;
                             }
                         case "ViewUserGames":
                             {
                                 string response = serverServicesManager.ShowUserGames(message);
-                                ProtocolDataProgram.Send(clientSocket, response);
+                                ProtocolDataProgram.Send(tcpClient, response);
                                 break;
                             }
                     }
@@ -157,27 +156,26 @@ namespace Server
             }
         }
 
-        static void Main(string[] args)
+        public static void Main(string[] args)
         {
             IConfiguration builder = new ConfigurationBuilder().AddJsonFile("Settings.json", true, true).Build();
             var ServerIpAdress = builder["Server:IP"];
             var ServerPort = Int32.Parse(builder["Server:Port"]);
             var Backlog = Int32.Parse(builder["Server:Backlog"]);
-            Socket serverSocket = new Socket(
-                AddressFamily.InterNetwork,
-                SocketType.Stream,
-                ProtocolType.Tcp
-            );
-            serverServicesManager = ServerServicesManager.Instance();
-            serverServicesManager.SetSocket(serverSocket);
 
-            IPEndPoint serverIPEndPoint = new IPEndPoint(IPAddress.Parse(ServerIpAdress),ServerPort);
+            IPEndPoint serverIPEndPoint = new IPEndPoint(IPAddress.Parse(ServerIpAdress), ServerPort);
+
+            _tcpListener = new TcpListener(serverIPEndPoint);
+            serverServicesManager = ServerServicesManager.Instance();
+            serverServicesManager.SetTcpListener(_tcpListener);
+
             bool inicio = true;
             try
             {
-                serverSocket.Bind(serverIPEndPoint);
-                serverSocket.Listen(Backlog);
-                new Thread(() => ListenForConnections(serverSocket)).Start();
+                //serverSocket.Listen(Backlog);
+                ListenForConnections(_tcpListener.AcceptTcpClient());
+                _tcpListener.Start(Backlog); //es backlog ahi no?
+                //o es Start() solo 
                 while (!_exit)
                 {
                     if (inicio)
@@ -212,10 +210,10 @@ namespace Server
                         case "2":
                             {
                                 _exit = true;
-                                serverSocket.Close(0);
+                                _tcpListener.Stop();
                                 foreach (var client in _clients)
                                 {
-                                    client.Shutdown(SocketShutdown.Both);
+                                    client.GetStream().Close();
                                     client.Close();
                                 }
                                 Console.WriteLine("Desconectando el servidor!");

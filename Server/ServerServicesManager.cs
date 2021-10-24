@@ -12,7 +12,7 @@ namespace Server
         private readonly static ServerServicesManager _instance = new ServerServicesManager();
         private Catalogue gameCatalogue = Catalogue.Instance;
         private List<User> users = new List<User>();
-        private Socket serverSocket;
+        private TcpListener _tcpListener;
         FileCommunicationHandler fileCommunication;
 
         public static ServerServicesManager Instance()
@@ -20,13 +20,13 @@ namespace Server
             return _instance;
         }
 
-        public void SetSocket(Socket socket)
+        public void SetTcpListener(TcpListener tcpListener)
         {
-            serverSocket = socket;
+            _tcpListener = tcpListener;
         }
 
-        public string PublishGame(Game newGame, Socket clientSocket) {
-                this.fileCommunication = new FileCommunicationHandler(clientSocket);
+        public string PublishGame(Game newGame, TcpClient tcpClient) {
+                this.fileCommunication = new FileCommunicationHandler(tcpClient);
                 fileCommunication.ReceiveFile();
                 lock (this.gameCatalogue.Games)
                 {
@@ -34,6 +34,7 @@ namespace Server
                 }
                 return "Juego agregado con exito";
         }
+
         public string GameDetails(string message) {
             string response = "";
             lock (this.gameCatalogue.Games)
@@ -258,13 +259,13 @@ namespace Server
             }
         }
 
-        public string SendGameCover(string gameCover,Socket clientSocket)
+        public string SendGameCover(string gameCover,TcpClient tcpClient)
         {
             string path = Directory.GetCurrentDirectory() + "\\" + gameCover;
             if (File.Exists(path))
             {
                 Console.WriteLine("Enviando imagen al cliente...");
-                var fileCommunication = new FileCommunicationHandler(clientSocket);
+                var fileCommunication = new FileCommunicationHandler(tcpClient);
                 fileCommunication.SendFile(path);
                 Console.WriteLine("Imagen enviada!");
             }
