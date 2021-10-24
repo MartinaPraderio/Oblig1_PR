@@ -36,7 +36,6 @@ namespace ProtocolData
                 //2 Codifico el mensaje a bytes
                 byte[] data = Encoding.UTF8.GetBytes(message);
                 //3 Leo el largo del mensaje codificado
-                //    (largo codificado <> largo mensaje)
                 int length = data.Length;
                 //4 Codifico dicho largo a bytes
                 byte[] dataLength = BitConverter.GetBytes(length);

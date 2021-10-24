@@ -38,7 +38,7 @@ namespace Client
         public async Task<bool> SendMessageAsync(string message, action action)
         {
             bool ConnectionState = _tcpClient.Connected;
-            if (_tcpClient.Client.Poll(5000, SelectMode.SelectRead) && (_tcpClient.Available == 0)) //ver esto como hacerlo para tcpClient
+            if (_tcpClient.Client.Poll(5000, SelectMode.SelectRead) && (_tcpClient.Available == 0)) 
             {
                 ConnectionState = false;
             }

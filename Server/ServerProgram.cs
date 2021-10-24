@@ -18,15 +18,16 @@ namespace Server
         static bool _exit = false;
         static List<TcpClient> _clients = new List<TcpClient>();
 
-        private static async Task ListenForConnectionsAsync(TcpClient tcpClient) //ver si recibo eso o tcpClient y con lo de networkStteamHandler
+        private static async Task ListenForConnectionsAsync(TcpListener tcpListener)
         {
             while (!_exit)
             {
                 try
                 {
-                    //var clientConnected = await tcpListener.AcceptTcpClientAsync(); //ver si es este o AcceptTcpClientAsync
+                    var tcpClient = await tcpListener.AcceptTcpClientAsync(); 
+                    Task userThread = new Task(async () => await HandleClientAsync(tcpClient));
+                    userThread.Start();
                     _clients.Add(tcpClient);
-                    await HandleClientAsync(tcpClient);
                 }
                 catch (Exception e)
                 {
@@ -189,10 +190,7 @@ namespace Server
             try
             {
                 _tcpListener.Start(Backlog);
-                //serverSocket.Listen(Backlog);
-                await Task.Run(async() => ListenForConnectionsAsync(await _tcpListener.AcceptTcpClientAsync())); 
-                 //es backlog ahi no?
-                //o es Start() solo 
+                Task.Run(async() => await ListenForConnectionsAsync(_tcpListener));
                 while (!_exit)
                 {
                     PrintMenu();
