@@ -2,6 +2,7 @@
 using System.IO;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace ProtocolData
 {
@@ -16,7 +17,7 @@ namespace ProtocolData
             _fileStreamHandler = new FileStreamHandler();
         }
 
-        public void SendFile(string path)
+        public async Task SendFileAsync(string path)
         {
             var fileInfo = new FileInfo(path);
             string fileName = fileInfo.Name;
@@ -24,34 +25,34 @@ namespace ProtocolData
             int fileNameLength = fileNameData.Length;
             byte[] fileNameLengthData = BitConverter.GetBytes(fileNameLength);
             // 1.- Envío el largo del nombre del archivo
-            _networkStreamHandler.SendData(fileNameLengthData);
+            await _networkStreamHandler.SendDataAsync(fileNameLengthData);
             // 2.- Envío el nombre del archivo
-            _networkStreamHandler.SendData(fileNameData);
+            await _networkStreamHandler.SendDataAsync(fileNameData);
 
             long fileSize = fileInfo.Length;
             byte[] fileSizeDataLength = BitConverter.GetBytes(fileSize);
             // 3.- Envío el largo del archivo
-            _networkStreamHandler.SendData(fileSizeDataLength);
+            await _networkStreamHandler.SendDataAsync(fileSizeDataLength);
             // 4.- Envío los datos del archivo
-            SendFile(fileSize, path);
+            await SendFileAsync (fileSize, path);
         }
 
-        public void ReceiveFile()
+        public async Task ReceiveFileAsync()
         {
             // 1.- Recibir el largo del nombre del archivo
-            byte[] fileNameLengthData = _networkStreamHandler.ReadData(ProtocolSpecification.FileNameSize);
+            byte[] fileNameLengthData = await _networkStreamHandler.ReadDataAsync(ProtocolSpecification.FileNameSize);
             int fileNameLength = BitConverter.ToInt32(fileNameLengthData);
             // 2.- Recibir el nombre del archivo
-            byte[] fileNameData = _networkStreamHandler.ReadData(fileNameLength);
+            byte[] fileNameData = await _networkStreamHandler.ReadDataAsync(fileNameLength);
             string fileName = Encoding.UTF8.GetString(fileNameData);
 
             // 3.- Recibo el largo del archivo
-            byte[] fileSizeDataLength = _networkStreamHandler.ReadData(ProtocolSpecification.FileSize);
+            byte[] fileSizeDataLength = await _networkStreamHandler.ReadDataAsync(ProtocolSpecification.FileSize);
             long fileSize = BitConverter.ToInt64(fileSizeDataLength);
-            ReceiveFile(fileSize, fileName);
+            await ReceiveFileAsync(fileSize, fileName);
         }
 
-        private void SendFile(long fileSize, string path)
+        private async Task SendFileAsync(long fileSize, string path)
         {
             long fileParts = ProtocolSpecification.CalculateParts(fileSize);
             long offset = 0;
@@ -62,22 +63,22 @@ namespace ProtocolData
                 byte[] data;
                 if (currentPart != fileParts)
                 {
-                    data = _fileStreamHandler.ReadData(path, ProtocolSpecification.MaxPacketSize, offset);
+                    data = await _fileStreamHandler.ReadDataAsync(path, ProtocolSpecification.MaxPacketSize, offset);
                     offset += ProtocolSpecification.MaxPacketSize;
                 }
                 else
                 {
                     int lastPartSize = (int)(fileSize - offset);
-                    data = _fileStreamHandler.ReadData(path, lastPartSize, offset);
+                    data = await _fileStreamHandler.ReadDataAsync(path, lastPartSize, offset);
                     offset += lastPartSize;
                 }
 
-                _networkStreamHandler.SendData(data);
+                await _networkStreamHandler.SendDataAsync(data);
                 currentPart++;
             }
         }
 
-        private void ReceiveFile(long fileSize, string fileName)
+        private async Task ReceiveFileAsync(long fileSize, string fileName)
         {
             long fileParts = ProtocolSpecification.CalculateParts(fileSize);
             long offset = 0;
@@ -87,16 +88,16 @@ namespace ProtocolData
                 byte[] data;
                 if (currentPart != fileParts)
                 {
-                    data = _networkStreamHandler.ReadData(ProtocolSpecification.MaxPacketSize);
+                    data = await _networkStreamHandler.ReadDataAsync(ProtocolSpecification.MaxPacketSize);
                     offset += ProtocolSpecification.MaxPacketSize;
                 }
                 else
                 {
                     int lastPartSize = (int)(fileSize - offset);
-                    data = _networkStreamHandler.ReadData(lastPartSize);
+                    data = await _networkStreamHandler.ReadDataAsync(lastPartSize);
                     offset += lastPartSize;
                 }
-                _fileStreamHandler.WriteData(fileName, data);
+                await _fileStreamHandler.WriteDataAsync(fileName, data);
                 currentPart++;
             }
         }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net.Sockets;
+using System.Threading.Tasks;
 
 namespace ProtocolData
 {
@@ -12,13 +13,13 @@ namespace ProtocolData
             _networkStream = networkStream;
         }
 
-        public byte[] ReadData(int length)
+        public async Task<byte[]> ReadDataAsync(int length)
         {
             int offset = 0;
             byte[] response = new byte[length];
             while (offset < length)
             {
-                int received = _networkStream.Read(response, offset, length - offset);
+                int received = await _networkStream.ReadAsync(response, offset, length - offset);
                 if (received == 0)
                 {
                     throw new SocketException();
@@ -29,9 +30,9 @@ namespace ProtocolData
             return response;
         }
 
-        public void SendData(byte[] data)
+        public async Task SendDataAsync(byte[] data)
         {
-            _networkStream.Write(data, 0, data.Length);
+            await _networkStream.WriteAsync(data, 0, data.Length);
         }
     }
 }

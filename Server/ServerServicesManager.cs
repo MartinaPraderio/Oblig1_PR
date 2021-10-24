@@ -4,6 +4,7 @@ using Domain;
 using ProtocolData;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace Server
 {
@@ -25,9 +26,9 @@ namespace Server
             _tcpListener = tcpListener;
         }
 
-        public string PublishGame(Game newGame, TcpClient tcpClient) {
+        public async Task<string> PublishGameAsync(Game newGame, TcpClient tcpClient) {
                 this.fileCommunication = new FileCommunicationHandler(tcpClient);
-                fileCommunication.ReceiveFile();
+                await fileCommunication.ReceiveFileAsync();
                 lock (this.gameCatalogue.Games)
                 {
                     this.gameCatalogue.AddGame(newGame);
@@ -259,14 +260,14 @@ namespace Server
             }
         }
 
-        public string SendGameCover(string gameCover,TcpClient tcpClient)
+        public async Task<string> SendGameCoverAsync(string gameCover,TcpClient tcpClient)
         {
             string path = Directory.GetCurrentDirectory() + "\\" + gameCover;
             if (File.Exists(path))
             {
                 Console.WriteLine("Enviando imagen al cliente...");
                 var fileCommunication = new FileCommunicationHandler(tcpClient);
-                fileCommunication.SendFile(path);
+                await fileCommunication.SendFileAsync(path);
                 Console.WriteLine("Imagen enviada!");
             }
             return "La imagen solicitada fue recibida";

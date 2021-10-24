@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net.NetworkInformation;
 using System.Net;
+using System.Threading.Tasks;
 
 namespace Client
 {
@@ -34,7 +35,7 @@ namespace Client
         {
             userName = user;
         }
-        public bool SendMessage(string message, action action)
+        public async Task<bool> SendMessageAsync(string message, action action)
         {
             bool ConnectionState = _tcpClient.Connected;
             if (_tcpClient.Client.Poll(5000, SelectMode.SelectRead) && (_tcpClient.Available == 0)) //ver esto como hacerlo para tcpClient
@@ -44,14 +45,14 @@ namespace Client
 
             if (ConnectionState)
             {
-                ProtocolDataProgram.Send(_tcpClient.GetStream(), action.ToString());
-                ProtocolDataProgram.Send(_tcpClient.GetStream(), message);
+                await ProtocolDataProgram.SendAsync(_tcpClient.GetStream(), action.ToString());
+                await ProtocolDataProgram.SendAsync(_tcpClient.GetStream(), message);
             }
             return ConnectionState;
         }
 
 
-        public bool PublishGame()
+        public async Task<bool> PublishGameAsync()
         {
             Console.WriteLine("-----------PUBLICAR JUEGO------------");
             Console.WriteLine("Ingrese el titulo del juego");
@@ -100,22 +101,23 @@ namespace Client
 
             Game game = new Game(title, genderGame, synopsis, fileName);
 
-            string message = ProtocolDataProgram.SerializeGame(game);
-            
-
-            
+            string message = ProtocolDataProgram.SerializeGame(game);            
 
             if (File.Exists(path))
             {
+                bool success = await SendMessageAsync(message, action.PublishGame);
+                if (!success) { return false; }
+                
+
                 Console.WriteLine("Mandando imagen al servidor...");
                 Console.WriteLine("");
                 var fileCommunication = new FileCommunicationHandler(_tcpClient);
-                fileCommunication.SendFile(path);
+                await fileCommunication.SendFileAsync(path);
                 Console.WriteLine("Se termino de mandar la imagen al servidor");
-                bool success = SendMessage(message, action.PublishGame);
-                if (!success) { return false; }
-                string response = ProtocolDataProgram.Listen(_tcpClient.GetStream());
+
+                string response = await ProtocolDataProgram.ListenAsync(_tcpClient.GetStream());
                 Console.WriteLine(response);
+
             }
             else
             {
@@ -127,7 +129,7 @@ namespace Client
             return true;
         }
 
-        public bool ModifyGame()
+        public async Task<bool> ModifyGameAsync()
         {
             Console.WriteLine("-----------MODIFICAR JUEGO-----------");
             Console.WriteLine("Ingrese el titulo del juego a modificar");
@@ -171,58 +173,58 @@ namespace Client
             }
             Game game = new Game(newTitle, genderGame, synopsis, "cover");
             string message = title +Environment.NewLine+ ProtocolDataProgram.SerializeGame(game);
-            bool success = SendMessage(message, action.ModifyGame); ;
+            bool success = await SendMessageAsync(message, action.ModifyGame); ;
             if (!success) { return false; }
-            string response = ProtocolDataProgram.Listen(_tcpClient.GetStream());
+            string response = await ProtocolDataProgram.ListenAsync(_tcpClient.GetStream());
             Console.WriteLine(response);
             Console.WriteLine("-------------------------------------");
             return true;
         }
 
-        internal bool ViewUserGames()
+        internal async Task<bool> ViewUserGamesAsync()
         {
-            bool success = SendMessage(this.userName, action.ViewUserGames);
-            string response = ProtocolDataProgram.Listen(_tcpClient.GetStream());
+            bool success = await SendMessageAsync(this.userName, action.ViewUserGames);
+            string response = await ProtocolDataProgram.ListenAsync(_tcpClient.GetStream());
             Console.WriteLine(response);
             Console.WriteLine("-------------------------------------");
             return success;
         }
 
-        public bool DeleteGame()
+        public async Task<bool> DeleteGameAsync()
         {
             Console.WriteLine("------------ELIMINAR JUEGO------------");
             Console.WriteLine("Ingrese el titulo del juego a eliminar");
             string title = Console.ReadLine();
-            bool success = SendMessage(title, action.DeleteGame); ;
+            bool success = await SendMessageAsync(title, action.DeleteGame); ;
             if (!success) { return false; }
-            string response = ProtocolDataProgram.Listen(_tcpClient.GetStream());
+            string response = await ProtocolDataProgram.ListenAsync(_tcpClient.GetStream());
             Console.WriteLine(response);
             Console.WriteLine("-------------------------------------");
             return true;
         }
 
-        public bool BuyGame()
+        public async Task<bool> BuyGameAsync()
         {
             Console.WriteLine("-----------COMPRAR UN JUEGO-----------");
             
-            bool success = SendMessage("Comprar", action.ViewCatalogue);
+            bool success = await SendMessageAsync("Comprar", action.ViewCatalogue);
             if (!success) { return false; }
-            string response = ProtocolDataProgram.Listen(_tcpClient.GetStream());
+            string response = await ProtocolDataProgram.ListenAsync(_tcpClient.GetStream());
             Console.WriteLine(response);
             Console.WriteLine(" ");
             Console.WriteLine("Ingrese el titulo del juego que desea comprar");
             Console.WriteLine("");
             string title = Console.ReadLine();
             string message = this.userName + Environment.NewLine + title;
-            success = SendMessage(message, action.BuyGame);
+            success = await SendMessageAsync(message, action.BuyGame);
             if (!success) { return false; }
-            response = ProtocolDataProgram.Listen(_tcpClient.GetStream());
+            response = await ProtocolDataProgram.ListenAsync(_tcpClient.GetStream());
             Console.WriteLine(response);
             Console.WriteLine("-------------------------------------");
             return true;
         }
 
-        public bool QualifyGame()
+        public async Task<bool> QualifyGameAsync()
         {
             Console.WriteLine("---------CALIFICAR UN JUEGO----------");
             Console.WriteLine("Ingrese el titulo del juego a calificar: ");
@@ -259,23 +261,23 @@ namespace Client
             string review = Console.ReadLine();
             Console.WriteLine("");
             string message = this.userName +Environment.NewLine+gameTitleToQualify + Environment.NewLine + calification.ToString() + Environment.NewLine + review;
-            bool success = SendMessage(message, action.QualifyGame);
+            bool success = await SendMessageAsync(message, action.QualifyGame);
             if (!success) { return false; }
-            string response = ProtocolDataProgram.Listen(_tcpClient.GetStream());
+            string response = await ProtocolDataProgram.ListenAsync(_tcpClient.GetStream());
             Console.WriteLine(response);
             Console.WriteLine("-------------------------------------");
             return true;
         }
 
-        public bool GameDetails()
+        public async Task<bool> GameDetailsAsync()
         {
             Console.WriteLine("-------DETALLES DE UN JUEGO----------");
             Console.WriteLine("Ingrese el titulo del juego para ver los detalles");
             string title = Console.ReadLine();
             Console.WriteLine("");
-            bool success = SendMessage(title, action.GameDetails);
+            bool success = await SendMessageAsync(title, action.GameDetails);
             if (!success) { return false; }
-            string response = ProtocolDataProgram.Listen(_tcpClient.GetStream());
+            string response = await ProtocolDataProgram.ListenAsync(_tcpClient.GetStream());
             string[] info = response.Split(Environment.NewLine);
             if (info[0].Equals("N"))
             {
@@ -307,12 +309,12 @@ namespace Client
                 Console.WriteLine("");
                 if (option.Equals("1"))
                 {
-                    success = SendMessage(aGame.Cover, action.GameCover);
+                    success = await SendMessageAsync(aGame.Cover, action.GameCover);
                     if (!success) { return false; }
 
                     this.fileCommunication = new FileCommunicationHandler(_tcpClient);
-                    fileCommunication.ReceiveFile();
-                    string responseCover = ProtocolDataProgram.Listen(_tcpClient.GetStream());
+                    await fileCommunication.ReceiveFileAsync();
+                    string responseCover = await ProtocolDataProgram.ListenAsync(_tcpClient.GetStream());
                     Console.WriteLine(responseCover);
                     Console.WriteLine("");
                 }
@@ -321,7 +323,7 @@ namespace Client
             return true;
         }
 
-        public bool SearchGame()
+        public async Task<bool> SearchGameAsync()
         {
             Console.WriteLine("----------BUSCAR UN JUEGO------------");
             Console.WriteLine(" Busqueda por: ");
@@ -340,7 +342,7 @@ namespace Client
                     searchAction = action.SearchGameByTitle;
                     searchQuery = Console.ReadLine();
                     Console.WriteLine("");
-                    success = SendMessage(searchQuery, searchAction);
+                    success = await SendMessageAsync(searchQuery, searchAction);
                     if (!success) { return false; }
                     break;
                 case "2":
@@ -376,7 +378,7 @@ namespace Client
                             break;
                     }
                     searchAction = action.SearchGameByGender;
-                    success = SendMessage(genderGame.ToString(), searchAction);
+                    success = await SendMessageAsync(genderGame.ToString(), searchAction);
                     if (!success) { return false; }
                     break;
                 case "3":
@@ -408,11 +410,11 @@ namespace Client
                             break;
                     }
                     searchAction = action.SearchGameByRating;
-                    success = SendMessage(calification.ToString(), searchAction);
+                    success = await SendMessageAsync(calification.ToString(), searchAction);
                     if (!success) { return false; }
                     break;
             }
-            string response = ProtocolDataProgram.Listen(_tcpClient.GetStream());
+            string response = await ProtocolDataProgram.ListenAsync(_tcpClient.GetStream());
             string[] info = response.Split(Environment.NewLine);
             if (info[0].Equals("N"))
             {

@@ -6,6 +6,7 @@ using Microsoft.Extensions.Configuration;
 using ProtocolData;
 using Domain;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Server
 {
@@ -17,15 +18,15 @@ namespace Server
         static bool _exit = false;
         static List<TcpClient> _clients = new List<TcpClient>();
 
-        private static void ListenForConnections(TcpListener tcpListener) //ver si recibo eso o tcpClient y con lo de networkStteamHandler
+        private static async Task ListenForConnectionsAsync(TcpClient tcpClient) //ver si recibo eso o tcpClient y con lo de networkStteamHandler
         {
             while (!_exit)
             {
                 try
                 {
-                    var clientConnected = tcpListener.AcceptTcpClient(); //ver si es este o AcceptTcpClientAsync
-                    _clients.Add(clientConnected);
-                    HandleClient(clientConnected);
+                    //var clientConnected = await tcpListener.AcceptTcpClientAsync(); //ver si es este o AcceptTcpClientAsync
+                    _clients.Add(tcpClient);
+                    await HandleClientAsync(tcpClient);
                 }
                 catch (Exception e)
                 {
@@ -49,70 +50,70 @@ namespace Server
             Console.WriteLine("6- Ver lista de usuarios");
             Console.WriteLine("-----------------------------------");
         }
-        private static void HandleClient(TcpClient tcpClient)
+        private static async Task HandleClientAsync(TcpClient tcpClient)
         {
             bool connected = true;
             while (connected)
             {
                 try
                 {
-                    string command = ProtocolDataProgram.Listen(tcpClient.GetStream());
-                    string message = ProtocolDataProgram.Listen(tcpClient.GetStream());
+                    string command = await ProtocolDataProgram.ListenAsync(tcpClient.GetStream());
+                    string message = await ProtocolDataProgram.ListenAsync(tcpClient.GetStream());
                     switch (command)
                     {
                         case "PublishGame":
                             {
                                 Game aGame = ProtocolDataProgram.DeserializeGame(message);
-                                string response = serverServicesManager.PublishGame(aGame, tcpClient);
-                                ProtocolDataProgram.Send(tcpClient.GetStream(), response);
+                                string response = await serverServicesManager.PublishGameAsync(aGame, tcpClient);
+                                await ProtocolDataProgram.SendAsync(tcpClient.GetStream(), response);
                                 break;
                             }
                         case "NotifyUsername":
                             {
                                 string response = serverServicesManager.Login(message);
-                                ProtocolDataProgram.Send(tcpClient.GetStream(), response);
+                                await ProtocolDataProgram.SendAsync(tcpClient.GetStream(), response);
                                 break;
                             }
                         case "DeleteGame":
                             {
                                 string response = serverServicesManager.DeleteGame(message);
-                                ProtocolDataProgram.Send(tcpClient.GetStream(), response);
+                                await ProtocolDataProgram.SendAsync(tcpClient.GetStream(), response);
                                 break;
                             }
                         case "ModifyGame":
                             {
                                 string response = serverServicesManager.ModifyGame(message);
-                                ProtocolDataProgram.Send(tcpClient.GetStream(), response);
+                                await ProtocolDataProgram.SendAsync(tcpClient.GetStream(), response);
                                 break;
                             }
                         case "SearchGameByTitle":
                             {
                                 string response = serverServicesManager.SearchGameByTitle(message);
-                                ProtocolDataProgram.Send(tcpClient.GetStream(), response);
+                                await ProtocolDataProgram.SendAsync(tcpClient.GetStream(), response);
                                 break;
                             }
                         case "SearchGameByGender":
                             {
                                 string response = serverServicesManager.SearchGameByGender(message);
-                                ProtocolDataProgram.Send(tcpClient.GetStream(), response);
+                                await ProtocolDataProgram.SendAsync(tcpClient.GetStream(), response);
                                 break;
                             }
                         case "SearchGameByRating":
                             {
                                 string response = serverServicesManager.SearchGameByRating(message);
-                                ProtocolDataProgram.Send(tcpClient.GetStream(), response);
+                                await ProtocolDataProgram.SendAsync(tcpClient.GetStream(), response);
                                 break;
                             }
                         case "QualifyGame":
                             {
                                 string response = serverServicesManager.QualifyGame(message);
-                                ProtocolDataProgram.Send(tcpClient.GetStream(), response);
+                                await ProtocolDataProgram.SendAsync(tcpClient.GetStream(), response);
                                 break;
                             }
                         case "GameDetails":
                             {
                                 string response = serverServicesManager.GameDetails(message);
-                                ProtocolDataProgram.Send(tcpClient.GetStream(), response);
+                                await ProtocolDataProgram.SendAsync(tcpClient.GetStream(), response);
                                 break;
                             }
                         case "EndConnection":
@@ -122,26 +123,26 @@ namespace Server
                             }
                         case "GameCover":
                             {
-                                string response = serverServicesManager.SendGameCover(message, tcpClient);
-                                ProtocolDataProgram.Send(tcpClient.GetStream(), response);
+                                string response = await serverServicesManager.SendGameCoverAsync(message, tcpClient);
+                                await ProtocolDataProgram.SendAsync(tcpClient.GetStream(), response);
                                 break;
                             }
                         case "ViewCatalogue":
                             {
                                 string response = serverServicesManager.ViewCatalogue();
-                                ProtocolDataProgram.Send(tcpClient.GetStream(), response);
+                                await ProtocolDataProgram.SendAsync(tcpClient.GetStream(), response);
                                 break;
                             }
                         case "BuyGame":
                             {
                                 string response = serverServicesManager.BuyGame(message);
-                                ProtocolDataProgram.Send(tcpClient.GetStream(), response);
+                                await ProtocolDataProgram.SendAsync(tcpClient.GetStream(), response);
                                 break;
                             }
                         case "ViewUserGames":
                             {
                                 string response = serverServicesManager.ShowUserGames(message);
-                                ProtocolDataProgram.Send(tcpClient.GetStream(), response);
+                                await ProtocolDataProgram.SendAsync(tcpClient.GetStream(), response);
                                 break;
                             }
                     }
@@ -156,7 +157,7 @@ namespace Server
             }
         }
 
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             IConfiguration builder = new ConfigurationBuilder().AddJsonFile("Settings.json", true, true).Build();
             var ServerIpAdress = builder["Server:IP"];
@@ -169,35 +170,31 @@ namespace Server
             serverServicesManager = ServerServicesManager.Instance();
             serverServicesManager.SetTcpListener(_tcpListener);
 
-            bool inicio = true;
+            Console.WriteLine("Si desea iniciar la aplicacion con datos de prueba ingrese 1");
+            Console.WriteLine("De lo contrario ingrese cualquier caracter");
+            string response = Console.ReadLine();
+            Console.WriteLine("");
+            if (response.Equals("1"))
+            {
+                serverServicesManager.CargarDatosDePrueba();
+                Console.WriteLine("Su aplicación se iniciara con datos de prueba");
+            }
+            else
+            {
+                Console.WriteLine("Su aplicación se iniciara vacía");
+            }
+            Console.WriteLine("---------------------------------------------");
+            Console.WriteLine("");
+
             try
             {
-                _tcpListener.Start(1);
+                _tcpListener.Start(Backlog);
                 //serverSocket.Listen(Backlog);
-                ListenForConnections(_tcpListener);
+                await Task.Run(async() => ListenForConnectionsAsync(await _tcpListener.AcceptTcpClientAsync())); 
                  //es backlog ahi no?
                 //o es Start() solo 
                 while (!_exit)
                 {
-                    if (inicio)
-                    {
-                        Console.WriteLine("Si desea iniciar la aplicacion con datos de prueba ingrese 1");
-                        Console.WriteLine("De lo contrario ingrese cualquier caracter");
-                        string response = Console.ReadLine();
-                        Console.WriteLine("");
-                        if (response.Equals("1"))
-                        {
-                            serverServicesManager.CargarDatosDePrueba();
-                            Console.WriteLine("Su aplicación se iniciara con datos de prueba");
-                        }
-                        else
-                        {
-                            Console.WriteLine("Su aplicación se iniciara vacía");
-                        }
-                        Console.WriteLine("---------------------------------------------");
-                        Console.WriteLine("");
-                        inicio = false;
-                    }
                     PrintMenu();
                     string option = Console.ReadLine();
                     switch (option)

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading.Tasks;
 using Domain;
 
 namespace ProtocolData
@@ -30,7 +31,7 @@ namespace ProtocolData
         public ProtocolDataProgram() { }
         private const int ProtocolFixedSize = 4;
 
-        public static void Send(NetworkStream networkStream, string message)
+        public static async Task SendAsync(NetworkStream networkStream, string message)
         {    
                 //2 Codifico el mensaje a bytes
                 byte[] data = Encoding.UTF8.GetBytes(message);
@@ -41,22 +42,21 @@ namespace ProtocolData
                 byte[] dataLength = BitConverter.GetBytes(length);
 
                 //5 Envío el largo en bytes
-                SendBatch(networkStream, dataLength);
+                await SendBatchAsync(networkStream, dataLength);
 
                 //6 Envío el mensaje
-                SendBatch(networkStream, data);
+                await SendBatchAsync(networkStream, data);
             
         }
 
-        public static string Listen(NetworkStream networkStream)
+        public static async Task<string> ListenAsync(NetworkStream networkStream)
         {
             string dataString = "";
             //1 Creo la parte fija del protocolo
             byte[] dataLength = new byte[ProtocolFixedSize];
             //2 Recibo los datos fijos
 
-            //tcpClient.Receive(dataLength); //ver como hacer esto
-            networkStream.Read(dataLength);
+            await networkStream.ReadAsync(dataLength);
 
             //3 Interpreto dichos bytes para obtener cuanto serán los datos variables
             int length = BitConverter.ToInt32(dataLength);
@@ -64,8 +64,7 @@ namespace ProtocolData
             byte[] data = new byte[length];
             //5 Recibo el mensaje (largo variable, que ahora se que es length)
 
-            //tcpClient.Receive(data);  //ver como hacer esto
-            networkStream.Read(data);
+            await networkStream.ReadAsync(data);
 
             //6 Convierto los datos a string
             string message = Encoding.UTF8.GetString(data);
@@ -74,21 +73,9 @@ namespace ProtocolData
             return dataString;
         }
 
-        private static void SendBatch(NetworkStream networkStream , byte[] data)
+        private static async Task SendBatchAsync(NetworkStream networkStream , byte[] data)
         {
-            /* int totalDataSent = 0;
-
-             while (totalDataSent < data.Length)
-             {
-                 int sent = tcpClient.Send(data, totalDataSent, data.Length - totalDataSent, SocketFlags.None); //ver como hacer esto con tcp
-                 if (sent == 0)
-                 {
-                     throw new SocketException();
-                 }
-                 //totalDataSent += sent;
-             }*/
-            networkStream.WriteAsync(data, 0, data.Length);
-
+            await networkStream.WriteAsync(data, 0, data.Length);
         }
 
         public static string SerializeGame(Game game)

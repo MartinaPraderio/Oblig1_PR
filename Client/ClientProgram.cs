@@ -4,6 +4,7 @@ using System.Net.Sockets;
 using System.Threading;
 using ProtocolData;
 using Microsoft.Extensions.Configuration;
+using System.Threading.Tasks;
 
 namespace Client
 {
@@ -32,7 +33,7 @@ namespace Client
 
         }
 
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             IConfiguration builder = new ConfigurationBuilder().AddJsonFile("Settings.json", true, true).Build();
             string ServerIpAdress = builder["Server:IP"];
@@ -54,42 +55,27 @@ namespace Client
             
             try
             {
-                ConnectToServer(ClientIpAdress, ClientPort, ServerIpAdress, ServerPort);
+                await ConnectToServerAsync(ClientIpAdress, ClientPort, ServerIpAdress, ServerPort);
                 
                 string menuOption = "";
                 bool success = true;
                 bool logged = false;
                 while (menuOption != "9")
                 {
-                    while (!logged) {
-                        clientServicesManager = ClientServicesManager.Instance();
-                        clientServicesManager.SetTcpClient(_tcpClient);
-                        Console.WriteLine("Ingrese su nombre de usuario");
-                        string userName = Console.ReadLine();
-                        clientServicesManager.SendMessage(userName, action.NotifyUsername);
-                        string userCreatedResponse = ProtocolDataProgram.Listen(_tcpClient.GetStream());
-                        Console.WriteLine(userCreatedResponse);
-                        if(userCreatedResponse.Equals("Login exitoso"))
-                        {
-                            clientServicesManager.SetUserName(userName);   
-                            logged = true;
-                        }
-                    }
+                    logged = await ServerLoginAsync(logged);
 
                     if (!success)
                     {
+                        logged = false;
                         Console.WriteLine("---------------/!\\-----------------");
                         Console.WriteLine("Se perdió la conexión con el servidor.");
-                        success = ConnectToServerInterface(ClientIpAdress, ClientPort, ServerIpAdress, ServerPort);
-                        if (success)
+                        while (!success)
                         {
-                            Console.WriteLine("Ingrese su nombre de usuario");
-                            string userName = Console.ReadLine();
-                            clientServicesManager.SetTcpClient(_tcpClient);
-                            clientServicesManager.SetUserName(userName);
-                            clientServicesManager.SendMessage(userName, action.NotifyUsername);
-                            string userCreatedResponse = ProtocolDataProgram.Listen(_tcpClient.GetStream());
-                            Console.WriteLine(userCreatedResponse);
+                            success = await ConnectToServerInterface(ClientIpAdress, ClientPort, ServerIpAdress, ServerPort);
+                            if (success)
+                            {
+                                logged = await ServerLoginAsync(logged);
+                            }
                         }
                     }
                     else
@@ -102,42 +88,42 @@ namespace Client
                         {
                             case "1":
                                 {
-                                    success = clientServicesManager.PublishGame();
+                                    success = await clientServicesManager.PublishGameAsync();
                                     break;
                                 }
                             case "2":
                                 {
-                                    success = clientServicesManager.DeleteGame();
+                                    success = await clientServicesManager.DeleteGameAsync();
                                     break;
                                 }
                             case "3":
                                 {
-                                    success = clientServicesManager.ModifyGame();
+                                    success = await clientServicesManager.ModifyGameAsync();
                                     break;
                                 }
                             case "4":
                                 {
-                                    success = clientServicesManager.SearchGame();
+                                    success = await clientServicesManager.SearchGameAsync();
                                     break;
                                 }
                             case "5":
                                 {
-                                    success = clientServicesManager.QualifyGame();
+                                    success = await clientServicesManager.QualifyGameAsync();
                                     break;
                                 }
                             case "6":
                                 {
-                                    success = clientServicesManager.GameDetails();
+                                    success = await clientServicesManager.GameDetailsAsync();
                                     break;
                                 }
                             case "7":
                                 {
-                                    success = clientServicesManager.BuyGame();
+                                    success = await clientServicesManager.BuyGameAsync();
                                     break;
                                 }
                             case "8":
                                 {
-                                    success = clientServicesManager.ViewUserGames();
+                                    success = await clientServicesManager.ViewUserGamesAsync();
                                     break;
                                 }
                             case "9":
@@ -154,6 +140,7 @@ namespace Client
                                     break;
                                 }
                         }
+
                     }
                 }
 
@@ -166,7 +153,28 @@ namespace Client
             
         }
 
-        private static bool ConnectToServerInterface(string ClientIpAdress, int ClientPort, string ServerIpAdress, int ServerPort)
+        private static async Task<bool> ServerLoginAsync(bool logged)
+        {
+            while (!logged)
+            {
+                clientServicesManager = ClientServicesManager.Instance();
+                clientServicesManager.SetTcpClient(_tcpClient);
+                Console.WriteLine("Ingrese su nombre de usuario");
+                string userName = Console.ReadLine();
+                await clientServicesManager.SendMessageAsync(userName, action.NotifyUsername);
+                string userCreatedResponse = await ProtocolDataProgram.ListenAsync(_tcpClient.GetStream());
+                Console.WriteLine(userCreatedResponse);
+                if (userCreatedResponse.Equals("Login exitoso"))
+                {
+                    clientServicesManager.SetUserName(userName);
+                    logged = true;
+                }
+            }
+
+            return logged;
+        }
+
+        private static async Task<bool> ConnectToServerInterface(string ClientIpAdress, int ClientPort, string ServerIpAdress, int ServerPort)
         {
             Console.WriteLine("Ingrese 1 para intentar la conexion.");
             string option = Console.ReadLine();
@@ -174,30 +182,30 @@ namespace Client
             {
                 option = Console.ReadLine();
             }
-            bool success = ConnectToServer(ClientIpAdress, ClientPort, ServerIpAdress, ServerPort);
+            bool success = await ConnectToServerAsync(ClientIpAdress, ClientPort, ServerIpAdress, ServerPort);
             return success;
         }
 
-        private static bool ConnectToServer(string ClientIpAdress, int ClientPort, string ServerIpAdress, int ServerPort)
+        private static async Task<bool> ConnectToServerAsync(string ClientIpAdress, int ClientPort, string ServerIpAdress, int ServerPort)
         {
             IPEndPoint clientEndPoint = new IPEndPoint(IPAddress.Parse(ClientIpAdress), ClientPort);
-            IPEndPoint serverIPEndPoint  = new IPEndPoint(IPAddress.Parse(ServerIpAdress), ServerPort);
             Console.WriteLine("Tratando de conectarse al servidor...");
             try
             {
                 _tcpClient = new TcpClient(clientEndPoint);
-                _tcpClient.Connect(serverIPEndPoint);
+                await _tcpClient.ConnectAsync(IPAddress.Parse(ServerIpAdress), ServerPort);
                 Console.WriteLine("Cliente conectado al servidor!");
+                Console.WriteLine("-------------------------------------");
+                Console.WriteLine("");
                 return true;
             }
             catch(Exception e)
             {
                 Console.WriteLine("Falla al intentar conectarse al server");
+                Console.WriteLine("-------------------------------------");
+                Console.WriteLine("");
                 return false;
             }
-            
-            Console.WriteLine("-------------------------------------");
-            Console.WriteLine("");
         }
     }
 }
