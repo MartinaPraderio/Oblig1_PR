@@ -14,8 +14,6 @@ namespace Client
         private readonly static ClientServicesManager _instance = new ClientServicesManager();
         private ProtocolDataProgram protocolHandleData = new ProtocolDataProgram();
 
-        private readonly NetworkStream networkStream;
-
         private TcpClient _tcpClient;
 
         private string userName;
@@ -39,15 +37,15 @@ namespace Client
         public bool SendMessage(string message, action action)
         {
             bool ConnectionState = _tcpClient.Connected;
-            if (_tcpClient.Poll(5000, SelectMode.SelectRead) && (_tcpClient.Available == 0)) //ver esto como hacerlo para tcpClient
+            if (_tcpClient.Client.Poll(5000, SelectMode.SelectRead) && (_tcpClient.Available == 0)) //ver esto como hacerlo para tcpClient
             {
                 ConnectionState = false;
             }
 
             if (ConnectionState)
             {
-                ProtocolDataProgram.Send(networkStream, action.ToString());
-                ProtocolDataProgram.Send(_tcpClient, message);
+                ProtocolDataProgram.Send(_tcpClient.GetStream(), action.ToString());
+                ProtocolDataProgram.Send(_tcpClient.GetStream(), message);
             }
             return ConnectionState;
         }
@@ -116,7 +114,7 @@ namespace Client
                 Console.WriteLine("Se termino de mandar la imagen al servidor");
                 bool success = SendMessage(message, action.PublishGame);
                 if (!success) { return false; }
-                string response = ProtocolDataProgram.Listen(_tcpClient);
+                string response = ProtocolDataProgram.Listen(_tcpClient.GetStream());
                 Console.WriteLine(response);
             }
             else
@@ -175,7 +173,7 @@ namespace Client
             string message = title +Environment.NewLine+ ProtocolDataProgram.SerializeGame(game);
             bool success = SendMessage(message, action.ModifyGame); ;
             if (!success) { return false; }
-            string response = ProtocolDataProgram.Listen(_tcpClient);
+            string response = ProtocolDataProgram.Listen(_tcpClient.GetStream());
             Console.WriteLine(response);
             Console.WriteLine("-------------------------------------");
             return true;
@@ -184,7 +182,7 @@ namespace Client
         internal bool ViewUserGames()
         {
             bool success = SendMessage(this.userName, action.ViewUserGames);
-            string response = ProtocolDataProgram.Listen(_tcpClient);
+            string response = ProtocolDataProgram.Listen(_tcpClient.GetStream());
             Console.WriteLine(response);
             Console.WriteLine("-------------------------------------");
             return success;
@@ -197,7 +195,7 @@ namespace Client
             string title = Console.ReadLine();
             bool success = SendMessage(title, action.DeleteGame); ;
             if (!success) { return false; }
-            string response = ProtocolDataProgram.Listen(_tcpClient);
+            string response = ProtocolDataProgram.Listen(_tcpClient.GetStream());
             Console.WriteLine(response);
             Console.WriteLine("-------------------------------------");
             return true;
@@ -209,7 +207,7 @@ namespace Client
             
             bool success = SendMessage("Comprar", action.ViewCatalogue);
             if (!success) { return false; }
-            string response = ProtocolDataProgram.Listen(_tcpClient);
+            string response = ProtocolDataProgram.Listen(_tcpClient.GetStream());
             Console.WriteLine(response);
             Console.WriteLine(" ");
             Console.WriteLine("Ingrese el titulo del juego que desea comprar");
@@ -218,7 +216,7 @@ namespace Client
             string message = this.userName + Environment.NewLine + title;
             success = SendMessage(message, action.BuyGame);
             if (!success) { return false; }
-            response = ProtocolDataProgram.Listen(_tcpClient);
+            response = ProtocolDataProgram.Listen(_tcpClient.GetStream());
             Console.WriteLine(response);
             Console.WriteLine("-------------------------------------");
             return true;
@@ -263,7 +261,7 @@ namespace Client
             string message = this.userName +Environment.NewLine+gameTitleToQualify + Environment.NewLine + calification.ToString() + Environment.NewLine + review;
             bool success = SendMessage(message, action.QualifyGame);
             if (!success) { return false; }
-            string response = ProtocolDataProgram.Listen(_tcpClient);
+            string response = ProtocolDataProgram.Listen(_tcpClient.GetStream());
             Console.WriteLine(response);
             Console.WriteLine("-------------------------------------");
             return true;
@@ -277,7 +275,7 @@ namespace Client
             Console.WriteLine("");
             bool success = SendMessage(title, action.GameDetails);
             if (!success) { return false; }
-            string response = ProtocolDataProgram.Listen(_tcpClient);
+            string response = ProtocolDataProgram.Listen(_tcpClient.GetStream());
             string[] info = response.Split(Environment.NewLine);
             if (info[0].Equals("N"))
             {
@@ -314,7 +312,7 @@ namespace Client
 
                     this.fileCommunication = new FileCommunicationHandler(_tcpClient);
                     fileCommunication.ReceiveFile();
-                    string responseCover = ProtocolDataProgram.Listen(_tcpClient);
+                    string responseCover = ProtocolDataProgram.Listen(_tcpClient.GetStream());
                     Console.WriteLine(responseCover);
                     Console.WriteLine("");
                 }
@@ -414,7 +412,7 @@ namespace Client
                     if (!success) { return false; }
                     break;
             }
-            string response = ProtocolDataProgram.Listen(_tcpClient);
+            string response = ProtocolDataProgram.Listen(_tcpClient.GetStream());
             string[] info = response.Split(Environment.NewLine);
             if (info[0].Equals("N"))
             {

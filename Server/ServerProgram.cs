@@ -56,63 +56,63 @@ namespace Server
             {
                 try
                 {
-                    string command = ProtocolDataProgram.Listen(tcpClient);
-                    string message = ProtocolDataProgram.Listen(tcpClient);
+                    string command = ProtocolDataProgram.Listen(tcpClient.GetStream());
+                    string message = ProtocolDataProgram.Listen(tcpClient.GetStream());
                     switch (command)
                     {
                         case "PublishGame":
                             {
                                 Game aGame = ProtocolDataProgram.DeserializeGame(message);
                                 string response = serverServicesManager.PublishGame(aGame, tcpClient);
-                                ProtocolDataProgram.Send(tcpClient, response);
+                                ProtocolDataProgram.Send(tcpClient.GetStream(), response);
                                 break;
                             }
                         case "NotifyUsername":
                             {
                                 string response = serverServicesManager.Login(message);
-                                ProtocolDataProgram.Send(tcpClient, response);
+                                ProtocolDataProgram.Send(tcpClient.GetStream(), response);
                                 break;
                             }
                         case "DeleteGame":
                             {
                                 string response = serverServicesManager.DeleteGame(message);
-                                ProtocolDataProgram.Send(tcpClient, response);
+                                ProtocolDataProgram.Send(tcpClient.GetStream(), response);
                                 break;
                             }
                         case "ModifyGame":
                             {
                                 string response = serverServicesManager.ModifyGame(message);
-                                ProtocolDataProgram.Send(tcpClient, response);
+                                ProtocolDataProgram.Send(tcpClient.GetStream(), response);
                                 break;
                             }
                         case "SearchGameByTitle":
                             {
                                 string response = serverServicesManager.SearchGameByTitle(message);
-                                ProtocolDataProgram.Send(tcpClient, response);
+                                ProtocolDataProgram.Send(tcpClient.GetStream(), response);
                                 break;
                             }
                         case "SearchGameByGender":
                             {
                                 string response = serverServicesManager.SearchGameByGender(message);
-                                ProtocolDataProgram.Send(tcpClient, response);
+                                ProtocolDataProgram.Send(tcpClient.GetStream(), response);
                                 break;
                             }
                         case "SearchGameByRating":
                             {
                                 string response = serverServicesManager.SearchGameByRating(message);
-                                ProtocolDataProgram.Send(tcpClient, response);
+                                ProtocolDataProgram.Send(tcpClient.GetStream(), response);
                                 break;
                             }
                         case "QualifyGame":
                             {
                                 string response = serverServicesManager.QualifyGame(message);
-                                ProtocolDataProgram.Send(tcpClient, response);
+                                ProtocolDataProgram.Send(tcpClient.GetStream(), response);
                                 break;
                             }
                         case "GameDetails":
                             {
                                 string response = serverServicesManager.GameDetails(message);
-                                ProtocolDataProgram.Send(tcpClient, response);
+                                ProtocolDataProgram.Send(tcpClient.GetStream(), response);
                                 break;
                             }
                         case "EndConnection":
@@ -123,25 +123,25 @@ namespace Server
                         case "GameCover":
                             {
                                 string response = serverServicesManager.SendGameCover(message, tcpClient);
-                                ProtocolDataProgram.Send(tcpClient, response);
+                                ProtocolDataProgram.Send(tcpClient.GetStream(), response);
                                 break;
                             }
                         case "ViewCatalogue":
                             {
                                 string response = serverServicesManager.ViewCatalogue();
-                                ProtocolDataProgram.Send(tcpClient, response);
+                                ProtocolDataProgram.Send(tcpClient.GetStream(), response);
                                 break;
                             }
                         case "BuyGame":
                             {
                                 string response = serverServicesManager.BuyGame(message);
-                                ProtocolDataProgram.Send(tcpClient, response);
+                                ProtocolDataProgram.Send(tcpClient.GetStream(), response);
                                 break;
                             }
                         case "ViewUserGames":
                             {
                                 string response = serverServicesManager.ShowUserGames(message);
-                                ProtocolDataProgram.Send(tcpClient, response);
+                                ProtocolDataProgram.Send(tcpClient.GetStream(), response);
                                 break;
                             }
                     }
@@ -172,9 +172,10 @@ namespace Server
             bool inicio = true;
             try
             {
+                _tcpListener.Start(1);
                 //serverSocket.Listen(Backlog);
-                ListenForConnections(_tcpListener.AcceptTcpClient());
-                _tcpListener.Start(Backlog); //es backlog ahi no?
+                ListenForConnections(_tcpListener);
+                 //es backlog ahi no?
                 //o es Start() solo 
                 while (!_exit)
                 {

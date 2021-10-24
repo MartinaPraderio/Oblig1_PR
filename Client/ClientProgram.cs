@@ -13,8 +13,6 @@ namespace Client
 
         private static ClientServicesManager clientServicesManager;
 
-        private string ServerIpAdress;
-
         public static void printMenu()
         {
             Console.WriteLine("");
@@ -56,7 +54,6 @@ namespace Client
             
             try
             {
-
                 ConnectToServer(ClientIpAdress, ClientPort, ServerIpAdress, ServerPort);
                 
                 string menuOption = "";
@@ -70,7 +67,7 @@ namespace Client
                         Console.WriteLine("Ingrese su nombre de usuario");
                         string userName = Console.ReadLine();
                         clientServicesManager.SendMessage(userName, action.NotifyUsername);
-                        string userCreatedResponse = ProtocolDataProgram.Listen(_tcpClient);
+                        string userCreatedResponse = ProtocolDataProgram.Listen(_tcpClient.GetStream());
                         Console.WriteLine(userCreatedResponse);
                         if(userCreatedResponse.Equals("Login exitoso"))
                         {
@@ -91,7 +88,7 @@ namespace Client
                             clientServicesManager.SetTcpClient(_tcpClient);
                             clientServicesManager.SetUserName(userName);
                             clientServicesManager.SendMessage(userName, action.NotifyUsername);
-                            string userCreatedResponse = ProtocolDataProgram.Listen(_tcpClient);
+                            string userCreatedResponse = ProtocolDataProgram.Listen(_tcpClient.GetStream());
                             Console.WriteLine(userCreatedResponse);
                         }
                     }
