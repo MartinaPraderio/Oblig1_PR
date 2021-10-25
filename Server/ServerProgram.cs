@@ -146,15 +146,18 @@ namespace Server
                                 await ProtocolDataProgram.SendAsync(tcpClient.GetStream(), response);
                                 break;
                             }
+                        case "LogOut":
+                            {
+                                serverServicesManager.LogOut(message);
+                                break;
+                            }
                     }
                 }
                 catch 
                 {
                     connected = false;
 
-                }
-                
-
+                }               
             }
         }
 
@@ -190,7 +193,7 @@ namespace Server
             try
             {
                 _tcpListener.Start(Backlog);
-                Task.Run(async() => await ListenForConnectionsAsync(_tcpListener));
+                var connectionTask = Task.Run(async() => await ListenForConnectionsAsync(_tcpListener));
                 while (!_exit)
                 {
                     PrintMenu();

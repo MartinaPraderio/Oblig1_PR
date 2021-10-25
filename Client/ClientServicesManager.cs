@@ -181,7 +181,15 @@ namespace Client
             return true;
         }
 
-        internal async Task<bool> ViewUserGamesAsync()
+        public async Task<bool> Logout()
+        {
+            bool success = await SendMessageAsync(this.userName, action.LogOut);
+            Console.WriteLine("Se cerró la sesión correctamente");
+            SetUserName("");
+            return success;
+        }
+
+        public async Task<bool> ViewUserGamesAsync()
         {
             bool success = await SendMessageAsync(this.userName, action.ViewUserGames);
             string response = await ProtocolDataProgram.ListenAsync(_tcpClient.GetStream());

@@ -134,9 +134,9 @@ namespace Client
                                 }
                             case "10":
                                 {
+
+                                    success = await clientServicesManager.Logout();
                                     logged = false;
-                                    Console.WriteLine("Se cerró la sesión correctamente");
-                                    clientServicesManager.SetUserName("");
                                     break;
                                 }
                         }

@@ -13,6 +13,7 @@ namespace Server
         private readonly static ServerServicesManager _instance = new ServerServicesManager();
         private Catalogue gameCatalogue = Catalogue.Instance;
         private List<User> users = new List<User>();
+        private List<User> loggedUsers = new List<User>();
         private TcpListener _tcpListener;
         FileCommunicationHandler fileCommunication;
 
@@ -27,13 +28,13 @@ namespace Server
         }
 
         public async Task<string> PublishGameAsync(Game newGame, TcpClient tcpClient) {
-                this.fileCommunication = new FileCommunicationHandler(tcpClient);
-                await fileCommunication.ReceiveFileAsync();
-                lock (this.gameCatalogue.Games)
-                {
-                    this.gameCatalogue.AddGame(newGame);
-                }
-                return "Juego agregado con exito";
+            this.fileCommunication = new FileCommunicationHandler(tcpClient);
+            await fileCommunication.ReceiveFileAsync();
+            lock (this.gameCatalogue.Games)
+            {
+                this.gameCatalogue.AddGame(newGame);
+            }
+            return "Juego agregado con exito";
         }
 
         public string GameDetails(string message) {
@@ -92,16 +93,32 @@ namespace Server
 
         public string Login(string message)
         {
-            string response = "";
-            if(this.users.Find(x => x.UserName.Equals(message)) != null)
+            lock (this.users)
             {
-                response = "Login exitoso";
+                User user = this.users.Find(x => x.UserName.Equals(message));
+
+                string response = "";
+                if (user != null)
+                {
+                    lock (this.loggedUsers)
+                    {
+                        if (this.loggedUsers.Find(x => x.UserName.Equals(message)) != null)
+                        {
+                            response = "Ya existe una sesion con este usuario ";
+                        }
+                        else
+                        {
+                            response = "Login exitoso";
+                            this.loggedUsers.Add(user);
+                        }
+                    }
+                }
+                else
+                {
+                    response = "El usuario que ingresó no existe";
+                }
+                return response;
             }
-            else
-            {
-                response = "El usuario que ingresó no existe";
-            }
-            return response;
         }
 
         public string ModifyGame(string message)
@@ -214,6 +231,18 @@ namespace Server
             }
         }
 
+        public void LogOut(string message)
+        {
+            lock (this.loggedUsers)
+            {
+                User user = this.loggedUsers.Find(x => x.UserName.Equals(message));
+                if(user != null)
+                {
+                    loggedUsers.Remove(user);
+                }
+            }
+        }
+
         public string ShowUserGames(string message)
         {
             string response = "Lista de juegos:"+ Environment.NewLine;
@@ -288,43 +317,63 @@ namespace Server
 
         public void ModifyUser(string name)
         {
-            User aUser = this.users.Find(x => x.UserName.Equals(name));
-            if (aUser!= null)
+            lock (this.users)
             {
-                Console.WriteLine("Ingrese el nuevo nombre de usuario");
-                string newName = Console.ReadLine();
-                aUser.UserName = newName;
-                Console.WriteLine("El usuario fue modificado con exito.");
-            }
-            else
-            {
-                Console.WriteLine("El usuario que intenta modificar no existe.");
+                User aUser = this.users.Find(x => x.UserName.Equals(name));
+                if (aUser != null)
+                {
+                    Console.WriteLine("Ingrese el nuevo nombre de usuario");
+                    string newName = Console.ReadLine();
+                    aUser.UserName = newName;
+                    Console.WriteLine("El usuario fue modificado con exito.");
+                }
+                else
+                {
+                    Console.WriteLine("El usuario que intenta modificar no existe.");
+                }
             }
         }
 
         public void DeleteUser(string name)
         {
-            User aUser = this.users.Find(x => x.UserName.Equals(name));
-            if (aUser != null)
+            lock (this.users)
             {
-                this.users.Remove(aUser);
-                Console.WriteLine("El usuario fue eliminado con exito.");
-            }
-            else
-            {
-                Console.WriteLine("El usuario que intenta eliminar no existe.");
+                User aUser = this.users.Find(x => x.UserName.Equals(name));
+                lock (this.loggedUsers)
+                {
+                    User userLogged = this.loggedUsers.Find(x => x.UserName.Equals(name));
+                    if (aUser != null)
+                    {
+                        if (userLogged != null)
+                        {
+                            Console.WriteLine("No es posible eliminar este usuario ya que se encuentra loggeado");
+                        }
+                        else
+                        {
+                            this.users.Remove(aUser);
+                            Console.WriteLine("El usuario fue eliminado con exito.");
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("El usuario que intenta eliminar no existe.");
+                    }
+                }
             }
         }
 
         public void ShowUsers()
         {
-            Console.WriteLine("Usuarios registrados en el sistema:");
-            Console.WriteLine("");
-            foreach (User user in this.users)
+            lock (this.users)
             {
-                Console.WriteLine(user.UserName);
+                Console.WriteLine("Usuarios registrados en el sistema:");
+                Console.WriteLine("");
+                foreach (User user in this.users)
+                {
+                    Console.WriteLine(user.UserName);
+                }
+                Console.WriteLine("-----------------------------------");
             }
-            Console.WriteLine("-----------------------------------");
         }
     }
 }
