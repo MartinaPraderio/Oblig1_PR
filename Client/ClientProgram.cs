@@ -128,13 +128,13 @@ namespace Client
                                 }
                             case "9":
                                 {
-                                    _tcpClient.GetStream().Close();
+                                    success = await clientServicesManager.Logout();
+                                    _tcpClient.GetStream().Close(1);
                                     _tcpClient.Close();
                                     break;
                                 }
                             case "10":
                                 {
-
                                     success = await clientServicesManager.Logout();
                                     logged = false;
                                     break;
