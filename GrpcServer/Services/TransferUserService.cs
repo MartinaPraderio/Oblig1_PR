@@ -7,15 +7,15 @@ using System.Threading.Tasks;
 
 namespace GrpcServer.Services
 {
-    public class UserService 
+    public class TransferUserService : 
     {
-        private ILogger<UserService> _logger;
-        public UserService(ILogger<UserService> logger)
+        private ILogger<TransferUserService> _logger;
+        public TransferUserService(ILogger<TransferUserService> logger)
         {
             _logger = logger;
         }
 
-        public Task<User> TransferUser(User user, Grpc.Core.ServerCallContext context)
+        public Task<User> SendUser(User user, Grpc.Core.ServerCallContext context)
         {
             return Task.FromResult(new User
             {
