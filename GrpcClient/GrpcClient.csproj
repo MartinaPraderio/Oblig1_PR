@@ -5,6 +5,10 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
   </PropertyGroup>
 
+  <ItemGroup>
+    <None Remove="Protos\greet.proto" />
+  </ItemGroup>
+
   <!--<ItemGroup>
     <None Remove="Protos\greet.proto" />
   </ItemGroup>-->
@@ -19,7 +23,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Protobuf Include="Protos\greet.proto" GrpcServices="Client" />
+    <None Update="Protos\game.proto">
+      <GrpcServices>Server</GrpcServices>	
+    </None>
+  <Protobuf Include="Protos\game.proto" GrpcServices="None" ProtoRoot="Protos\" />
   </ItemGroup>
 
 </Project>

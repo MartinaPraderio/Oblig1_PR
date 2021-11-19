@@ -1,0 +1,20 @@
+﻿syntax = "proto3";
+
+option csharp_namespace = "GrpcServer";
+
+package user;
+
+import "game.proto";
+
+service TransferUserService {
+	rpc TransferUser(User) returns (User);
+}
+
+message User {
+  string UserName = 1;
+  repeated ListOfGames Games = 2;
+}
+
+message ListOfGames {
+  repeated Game games = 1;
+}
