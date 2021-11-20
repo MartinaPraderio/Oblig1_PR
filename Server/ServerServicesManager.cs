@@ -12,10 +12,11 @@ namespace Server
     {
         private readonly static ServerServicesManager _instance = new ServerServicesManager();
         private Catalogue gameCatalogue = Catalogue.Instance;
-        private List<User> users = new List<User>();
-        private List<User> loggedUsers = new List<User>();
+        private List<Domain.User> users = new List<Domain.User>();
+        private List<Domain.User> loggedUsers = new List<Domain.User>();
         private TcpListener _tcpListener;
         FileCommunicationHandler fileCommunication;
+        private Provider.ProviderClient grpcClient;
 
         public static ServerServicesManager Instance()
         {
@@ -27,7 +28,7 @@ namespace Server
             _tcpListener = tcpListener;
         }
 
-        public async Task<string> PublishGameAsync(Game newGame, TcpClient tcpClient) {
+        public async Task<string> PublishGameAsync(Domain.Game newGame, TcpClient tcpClient) {
             this.fileCommunication = new FileCommunicationHandler(tcpClient);
             await fileCommunication.ReceiveFileAsync();
             lock (this.gameCatalogue.Games)
@@ -41,7 +42,7 @@ namespace Server
             string response = "";
             lock (this.gameCatalogue.Games)
             {
-                Game game = gameCatalogue.FindGame(message);
+                Domain.Game game = gameCatalogue.FindGame(message);
             
                 if (game != null)
                 {
@@ -63,19 +64,24 @@ namespace Server
         }
   
 
-        public string AddUser(User newUser) {
-            lock (this.users)
+        public async Task<string> AddUser(string name) {
+            var reply = await grpcClient.SendUserAsync(new User
             {
-                this.users.Add(newUser);
-            }
-            return "Usuario agragado con exito";
+                UserName = name
+            });
+
+            //lock (this.users)
+            //{
+            //    this.users.Add(newUser);
+            //}
+            return reply.ToString();
         }
 
         public string DeleteGame(string message)
         {
             lock (this.gameCatalogue.Games)
             {
-                Game aGame = gameCatalogue.FindGame(message);
+                Domain.Game aGame = gameCatalogue.FindGame(message);
                 string response = "";
                 if (aGame != null)
                 {
@@ -95,7 +101,7 @@ namespace Server
         {
             lock (this.users)
             {
-                User user = this.users.Find(x => x.UserName.Equals(message));
+                Domain.User user = this.users.Find(x => x.UserName.Equals(message));
 
                 string response = "";
                 if (user != null)
@@ -127,11 +133,11 @@ namespace Server
             
             lock (this.gameCatalogue.Games)
             {
-                Game aGame = gameCatalogue.FindGame(info[0]);
+                Domain.Game aGame = gameCatalogue.FindGame(info[0]);
                 string response = "";
                 if (aGame != null)
                 {
-                    Game newGameValues = ProtocolDataProgram.DeserializeGame(info[1]);
+                    Domain.Game newGameValues = ProtocolDataProgram.DeserializeGame(info[1]);
 
                     aGame.Title = newGameValues.Title;
                     aGame.Gender = newGameValues.Gender;
@@ -150,7 +156,7 @@ namespace Server
         {
             lock (this.gameCatalogue.Games)
             {
-                List<Game> games = gameCatalogue.FindAllGamesContaining(message);
+                List<Domain.Game> games = gameCatalogue.FindAllGamesContaining(message);
                 string response = "";
                 if (games.Count != 0)
                 {
@@ -169,7 +175,7 @@ namespace Server
         {
             lock (this.gameCatalogue.Games)
             {
-                List<Game> games = gameCatalogue.FindAllGamesByGender(message);
+                List<Domain.Game> games = gameCatalogue.FindAllGamesByGender(message);
                 string response = "";
                 if (games.Count != 0)
                 {
@@ -189,7 +195,7 @@ namespace Server
             GameCalification calif = ProtocolDataProgram.ParseGameCalification(calification);
             lock (this.gameCatalogue.Games)
             {
-                List<Game> games = gameCatalogue.FindAllGames(calif);
+                List<Domain.Game> games = gameCatalogue.FindAllGames(calif);
                 string response = "";
                 if (games.Count != 0)
                 {
@@ -213,12 +219,12 @@ namespace Server
             string review = info[3];
             lock (this.gameCatalogue.Games)
             {
-                Game gameToQualify = gameCatalogue.FindGame(gameTitle);
+                Domain.Game gameToQualify = gameCatalogue.FindGame(gameTitle);
                 string addRatingResponse = "";
                 if (gameToQualify != null)
                 {
-                    User reviewer = this.users.Find(x => x.UserName.Equals(userName));
-                    UserRating newRating = new UserRating(review, calification, reviewer);
+                    Domain.User reviewer = users.Find(x => x.UserName.Equals(userName));
+                    Domain.UserRating newRating = new Domain.UserRating(review, calification, reviewer);
                     gameToQualify.AddRating(newRating);
                     addRatingResponse = "Su review fue publicada con exito.";
                 }
@@ -231,11 +237,16 @@ namespace Server
             }
         }
 
+        internal void SetGrpcClient(Provider.ProviderClient grpcClient)
+        {
+            this.grpcClient = grpcClient;
+        }
+
         public void LogOut(string message)
         {
             lock (this.loggedUsers)
             {
-                User user = this.loggedUsers.Find(x => x.UserName.Equals(message));
+                Domain.User user = this.loggedUsers.Find(x => x.UserName.Equals(message));
                 if(user != null)
                 {
                     loggedUsers.Remove(user);
@@ -248,8 +259,8 @@ namespace Server
             string response = "Lista de juegos:"+ Environment.NewLine;
             lock (this.users)
             {
-                User aUser = this.users.Find(x => x.UserName.Equals(message));
-                foreach (Game aGame in aUser.Games)
+                Domain.User aUser = this.users.Find(x => x.UserName.Equals(message));
+                foreach (Domain.Game aGame in aUser.Games)
                 {
                     response += "-------------------"+ Environment.NewLine;
                     response += "Nombre: " +aGame.Title+ Environment.NewLine;
@@ -270,12 +281,12 @@ namespace Server
                 string response = "";
                 
 
-                Game requestedGame = gameCatalogue.FindGame(gameName);
+                Domain.Game requestedGame = gameCatalogue.FindGame(gameName);
                 if (requestedGame != null)
                 {
                     lock (this.users)
                     {
-                        User buyer = this.users.Find(x => x.UserName.Equals(buyerName));
+                        Domain.User buyer = this.users.Find(x => x.UserName.Equals(buyerName));
                         buyer.AddGame(requestedGame);
                     }
                     response = "Su compra ha finalizado con exito";
@@ -306,12 +317,12 @@ namespace Server
         {
             lock (this.gameCatalogue.Games)
             {
-                Game fifa = new Game("Fifa 21 Prueba", GameGender.Deporte, "Futbol actual", "fifa.jpg");
-                fifa.AddRating(new UserRating("Muy buen juego", GameCalification.Bueno, new User("PacoPrueba")));
-                fifa.AddRating(new UserRating("No es compatible con mi pc", GameCalification.Muy_Malo, new User("JuanPrueba")));
+                Domain.Game fifa = new Domain.Game("Fifa 21 Prueba", GameGender.Deporte, "Futbol actual", "fifa.jpg");
+                fifa.AddRating(new Domain.UserRating("Muy buen juego", GameCalification.Bueno, new Domain.User("PacoPrueba")));
+                fifa.AddRating(new Domain.UserRating("No es compatible con mi pc", GameCalification.Muy_Malo, new Domain.User("JuanPrueba")));
                 gameCatalogue.AddGame(fifa);
-                gameCatalogue.AddGame(new Game("Call of duty Prueba", GameGender.Accion, "Shooter", "COD.jpg"));
-                gameCatalogue.AddGame(new Game("Mario Bros", GameGender.Aventura, "juego de nintendo", "mario.jpg"));
+                gameCatalogue.AddGame(new Domain.Game("Call of duty Prueba", GameGender.Accion, "Shooter", "COD.jpg"));
+                gameCatalogue.AddGame(new Domain.Game("Mario Bros", GameGender.Aventura, "juego de nintendo", "mario.jpg"));
             }
         }
 
@@ -319,7 +330,7 @@ namespace Server
         {
             lock (this.users)
             {
-                User aUser = this.users.Find(x => x.UserName.Equals(name));
+                Domain.User aUser = this.users.Find(x => x.UserName.Equals(name));
                 if (aUser != null)
                 {
                     Console.WriteLine("Ingrese el nuevo nombre de usuario");
@@ -338,10 +349,10 @@ namespace Server
         {
             lock (this.users)
             {
-                User aUser = this.users.Find(x => x.UserName.Equals(name));
+                Domain.User aUser = this.users.Find(x => x.UserName.Equals(name));
                 lock (this.loggedUsers)
                 {
-                    User userLogged = this.loggedUsers.Find(x => x.UserName.Equals(name));
+                    Domain.User userLogged = this.loggedUsers.Find(x => x.UserName.Equals(name));
                     if (aUser != null)
                     {
                         if (userLogged != null)
@@ -368,7 +379,7 @@ namespace Server
             {
                 Console.WriteLine("Usuarios registrados en el sistema:");
                 Console.WriteLine("");
-                foreach (User user in this.users)
+                foreach (Domain.User user in this.users)
                 {
                     Console.WriteLine(user.UserName);
                 }

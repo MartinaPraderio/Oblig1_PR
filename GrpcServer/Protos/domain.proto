@@ -1,13 +1,12 @@
-﻿syntax = "proto3";
+syntax = "proto3";
 
 option csharp_namespace = "GrpcServer";
 
 package domain;
 
-service TransferUser {
+service Provider {
 	rpc SendUser(User) returns (User);
 }
-
 message Game {
   string Title = 1;
   enum GameGender
@@ -25,8 +24,6 @@ message Game {
     string Cover = 5;
     float RatingAverage = 6;
 }
-
-
 
 message User {
   string UserName = 1;
@@ -53,4 +50,3 @@ message UserRating {
     User user = 3;
 
 }
-

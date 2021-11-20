@@ -7,6 +7,7 @@ using ProtocolData;
 using Domain;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Grpc.Net.Client;
 
 namespace Server
 {
@@ -64,7 +65,7 @@ namespace Server
                     {
                         case "PublishGame":
                             {
-                                Game aGame = ProtocolDataProgram.DeserializeGame(message);
+                                Domain.Game aGame = ProtocolDataProgram.DeserializeGame(message);
                                 string response = await serverServicesManager.PublishGameAsync(aGame, tcpClient);
                                 await ProtocolDataProgram.SendAsync(tcpClient.GetStream(), response);
                                 break;
@@ -163,6 +164,9 @@ namespace Server
 
         public static async Task Main(string[] args)
         {
+
+            
+
             IConfiguration builder = new ConfigurationBuilder().AddJsonFile("Settings.json", true, true).Build();
             var ServerIpAdress = builder["Server:IP"];
             var ServerPort = Int32.Parse(builder["Server:Port"]);
@@ -173,6 +177,16 @@ namespace Server
             _tcpListener = new TcpListener(serverIPEndPoint);
             serverServicesManager = ServerServicesManager.Instance();
             serverServicesManager.SetTcpListener(_tcpListener);
+
+            //gRCP
+            using var channel = GrpcChannel.ForAddress("https:localhost:7428");
+            var grpcClient = new Provider.ProviderClient(channel);
+            serverServicesManager.SetGrpcClient(grpcClient);
+
+            var reply = await grpcClient.SendUserAsync(new User
+            {
+                UserName = "USUARIOPRUEBA"
+            });
 
             Console.WriteLine("Si desea iniciar la aplicacion con datos de prueba ingrese 1");
             Console.WriteLine("De lo contrario ingrese cualquier caracter");
@@ -222,8 +236,7 @@ namespace Server
                             {
                                 Console.WriteLine("Ingrese el nombre del nuevo usuario");
                                 String name = Console.ReadLine();
-                                User newUser = new User(name);
-                                serverServicesManager.AddUser(newUser);
+                                await serverServicesManager.AddUser(name);
                                 Console.WriteLine("El usuario "+name+" fue registrado con exito.");
                                 break;
                             }

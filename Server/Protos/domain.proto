@@ -1,14 +1,14 @@
 ﻿syntax = "proto3";
 
-option csharp_namespace = "GrpcClient";
+option csharp_namespace = "Server";
 
 package domain;
 
-service TransferUser {
-	rpc SendUser(UserProto) returns (UserProto);
-}
 
-message GameProto {
+service Provider {
+	rpc SendUser(User) returns (User);
+}
+message Game {
   string Title = 1;
   enum GameGender
     {
@@ -20,25 +20,23 @@ message GameProto {
         Deporte = 5;
     }
     GameGender Gender = 2;
-    repeated UserRatingProto UserRatings = 3;
+    repeated UserRating UserRatings = 3;
     string Synopsis = 4;
     string Cover = 5;
     float RatingAverage = 6;
 }
 
-
-
-message UserProto {
+message User {
   string UserName = 1;
   repeated ListOfGames Games = 2;
 }
 
 message ListOfGames {
-  repeated GameProto games = 1;
+  repeated Game games = 1;
 }
 
 
-message UserRatingProto {
+message UserRating {
   string review = 1;
   
   enum GameCalification{
@@ -50,6 +48,6 @@ message UserRatingProto {
         Muy_Bueno = 5;
     }
     GameCalification calification = 2;
-    UserProto user = 3;
+    User user = 3;
 
 }
