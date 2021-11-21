@@ -78,7 +78,7 @@ namespace Server
                             }
                         case "DeleteGame":
                             {
-                                string response = serverServicesManager.DeleteGame(message);
+                                string response = await serverServicesManager.DeleteGame(message);
                                 await ProtocolDataProgram.SendAsync(tcpClient.GetStream(), response);
                                 break;
                             }
@@ -131,7 +131,7 @@ namespace Server
                             }
                         case "ViewCatalogue":
                             {
-                                string response = serverServicesManager.ViewCatalogue();
+                                string response = await serverServicesManager.ViewCatalogue();
                                 await ProtocolDataProgram.SendAsync(tcpClient.GetStream(), response);
                                 break;
                             }
@@ -211,7 +211,7 @@ namespace Server
                     {
                         case "1":
                             {
-                                string catalogue = serverServicesManager.ViewCatalogue();
+                                string catalogue = await serverServicesManager.ViewCatalogue();
                                 Console.WriteLine(catalogue);
                                 break;
                             }                            
@@ -246,12 +246,12 @@ namespace Server
                             {
                                 Console.WriteLine("Ingrese el nombre del usuario a eliminar");
                                 String name = Console.ReadLine();
-                                serverServicesManager.DeleteUser(name);
+                                await serverServicesManager.DeleteUser(name);
                                 break;
                             }
                         case "6":
                             {
-                                serverServicesManager.ShowUsers();
+                                await serverServicesManager.ShowUsers();
                                 break;
                             }
                     }

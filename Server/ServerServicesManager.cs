@@ -11,7 +11,7 @@ namespace Server
     public class ServerServicesManager
     {
         private readonly static ServerServicesManager _instance = new ServerServicesManager();
-        private Catalogue gameCatalogue = Catalogue.Instance;
+        private Domain.Catalogue gameCatalogue = Domain.Catalogue.Instance;
         private List<Domain.User> users = new List<Domain.User>();
         private List<Domain.User> loggedUsers = new List<Domain.User>();
         private TcpListener _tcpListener;
@@ -56,11 +56,48 @@ namespace Server
             return response;
         }
 
-        public string ViewCatalogue(){
-            lock (this.gameCatalogue.Games)
+        public async Task<string> ViewCatalogue(){
+            //lock (this.gameCatalogue.Games)
+            //{
+            //    return gameCatalogue.DisplayGames();
+            //}
+            var catalogue =  await grpcClient.GetCatalogueAsync(new InfoRequest
             {
-                return gameCatalogue.DisplayGames();
+                Info = "Ver Catalogo"
+            });
+
+            string catalogueView = "";
+            catalogueView += "Catalogo de juegos: " + Environment.NewLine;
+            catalogueView += "" + Environment.NewLine;
+
+            foreach (Game game in catalogue.Games)
+            {
+                catalogueView += "Titulo: " + game.Title + Environment.NewLine;
+                catalogueView += "Sinopsis: " + game.Synopsis + Environment.NewLine;
+                catalogueView += "Categoría: " + game.Gender + Environment.NewLine;
+                GameCalification calification = GameCalification.Sin_Calificaciones;
+                switch (Math.Truncate(game.RatingAverage))
+                {
+                    case 1:
+                        calification = GameCalification.Muy_Malo;
+                        break;
+                    case 2:
+                        calification = GameCalification.Malo;
+                        break;
+                    case 3:
+                        calification = GameCalification.Medio;
+                        break;
+                    case 4:
+                        calification = GameCalification.Bueno;
+                        break;
+                    case 5:
+                        calification = GameCalification.Muy_Bueno;
+                        break;
+                }
+                catalogueView += "Calificacion media: " + calification.ToString() + Environment.NewLine;
+                catalogueView += "" + Environment.NewLine;
             }
+            return catalogueView;
         }
   
 
@@ -69,7 +106,7 @@ namespace Server
             {
                 UserName = name
             });
-            Console.WriteLine(reply.UserName);
+            //Console.WriteLine(reply.UserName);
 
             //lock (this.users)
             //{
@@ -78,24 +115,13 @@ namespace Server
             return reply.ToString();
         }
 
-        public string DeleteGame(string message)
+        public async Task<string> DeleteGame(string message)
         {
-            lock (this.gameCatalogue.Games)
+            var reply = await grpcClient.DeleteGameAsync(new InfoRequest
             {
-                Domain.Game aGame = gameCatalogue.FindGame(message);
-                string response = "";
-                if (aGame != null)
-                {
-
-                    this.gameCatalogue.Games.Remove(aGame);
-                    response = "El juego fue eliminado.";
-                }
-                else
-                {
-                    response = "El juego que quiere eliminar no existe";
-                }
-                return response;
-            }
+                Info = "Borrar juego"
+            });
+            return reply.Info;
         }
 
         public string Login(string message)
@@ -326,71 +352,52 @@ namespace Server
                 gameCatalogue.AddGame(new Domain.Game("Mario Bros", GameGender.Aventura, "juego de nintendo", "mario.jpg"));
             }
         }
-
         public async Task ModifyUser(string name)
         {
-                var reply =  await grpcClient.GetUserAsync(new InfoRequest
-                {
-                    Info = name
-                });
+            var reply = await grpcClient.GetUserAsync(new InfoRequest
+            {
+                Info = name
+            });
 
-                if (reply != null)
-                {
-                    Console.WriteLine("Ingrese el nuevo nombre de usuario");
-                    string newName = Console.ReadLine();
+            if (reply != null)
+            {
+                Console.WriteLine("Ingrese el nuevo nombre de usuario");
+                string newName = Console.ReadLine();
                 var replyModify = await grpcClient.ModifyUserAsync(new InfoRequest
                 {
                     Info = newName
                 });
                 Console.WriteLine(replyModify);
-                }
-                else
-                {
-                    Console.WriteLine("El usuario que intenta modificar no existe.");
-                }
             }
+            else
+            {
+                Console.WriteLine("El usuario que intenta modificar no existe.");
+            }
+        }
+        public async Task DeleteUser(string name)
+        {
+            var reply = await grpcClient.DeleteUserAsync(new InfoRequest
+            {
+                Info = name
+            });
+            Console.WriteLine(reply.Info);
+        }
+        public async Task ShowUsers()
+        {
+            var reply = await grpcClient.GetUsersAsync(new InfoRequest
+            {
+                Info = "Ver Usuarios"
+            });
+
+            Console.WriteLine("Usuarios registrados en el sistema:");
+            Console.WriteLine("");
+            foreach (User user in reply.Users_)
+            {
+                Console.WriteLine(user.UserName);
+            }
+            Console.WriteLine("-----------------------------------");
         }
 
-        public void DeleteUser(string name)
-        {
-            lock (this.users)
-            {
-                Domain.User aUser = this.users.Find(x => x.UserName.Equals(name));
-                lock (this.loggedUsers)
-                {
-                    Domain.User userLogged = this.loggedUsers.Find(x => x.UserName.Equals(name));
-                    if (aUser != null)
-                    {
-                        if (userLogged != null)
-                        {
-                            Console.WriteLine("No es posible eliminar este usuario ya que se encuentra loggeado");
-                        }
-                        else
-                        {
-                            this.users.Remove(aUser);
-                            Console.WriteLine("El usuario fue eliminado con exito.");
-                        }
-                    }
-                    else
-                    {
-                        Console.WriteLine("El usuario que intenta eliminar no existe.");
-                    }
-                }
-            }
-        }
-
-        public void ShowUsers()
-        {
-            lock (this.users)
-            {
-                Console.WriteLine("Usuarios registrados en el sistema:");
-                Console.WriteLine("");
-                foreach (Domain.User user in this.users)
-                {
-                    Console.WriteLine(user.UserName);
-                }
-                Console.WriteLine("-----------------------------------");
-            }
-        }
     }
 }
+

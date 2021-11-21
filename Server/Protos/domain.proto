@@ -7,8 +7,14 @@ package domain;
 service Provider {
 	rpc SendUser(User) returns (User);
     rpc SendGame(Game) returns (Game);
+    rpc DeleteGame(InfoRequest) returns (InfoRequest);
+
     rpc GetUser(InfoRequest) returns (User);
     rpc ModifyUser(InfoRequest) returns (InfoRequest);
+    rpc DeleteUser(InfoRequest) returns (InfoRequest);
+
+    rpc GetCatalogue(InfoRequest) returns (Catalogue);
+    rpc GetUsers(InfoRequest) returns (Users);
 }
 
 message Game {
@@ -31,11 +37,11 @@ message Game {
 
 message User {
   string UserName = 1;
-  repeated ListOfGames Games = 2;
+  repeated Game Games = 2;
 }
 
-message ListOfGames {
-  repeated Game games = 1;
+message Users {
+    repeated User Users = 1;
 }
 
 message UserRating {
@@ -58,9 +64,8 @@ message ListOfUserRating {
 }
 
 message Catalogue {
-  repeated ListOfGames Games = 1;
+  repeated Game Games = 1;
 }
-
 
 message InfoRequest {
     string info = 1;

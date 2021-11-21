@@ -22,6 +22,7 @@ namespace Domain
             catalogueView += "Catalogo de juegos: " + Environment.NewLine;
             catalogueView += "" + Environment.NewLine;
 
+
             foreach (Game game in Games)
             {
                 catalogueView += "Titulo: " + game.Title + Environment.NewLine;
