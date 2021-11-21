@@ -69,6 +69,7 @@ namespace Server
             {
                 UserName = name
             });
+            Console.WriteLine(reply.UserName);
 
             //lock (this.users)
             //{
@@ -326,17 +327,22 @@ namespace Server
             }
         }
 
-        public void ModifyUser(string name)
+        public async Task ModifyUser(string name)
         {
-            lock (this.users)
-            {
-                Domain.User aUser = this.users.Find(x => x.UserName.Equals(name));
-                if (aUser != null)
+                var reply =  await grpcClient.GetUserAsync(new InfoRequest
+                {
+                    Info = name
+                });
+
+                if (reply != null)
                 {
                     Console.WriteLine("Ingrese el nuevo nombre de usuario");
                     string newName = Console.ReadLine();
-                    aUser.UserName = newName;
-                    Console.WriteLine("El usuario fue modificado con exito.");
+                var replyModify = await grpcClient.ModifyUserAsync(new InfoRequest
+                {
+                    Info = newName
+                });
+                Console.WriteLine(replyModify);
                 }
                 else
                 {

@@ -179,14 +179,9 @@ namespace Server
             serverServicesManager.SetTcpListener(_tcpListener);
 
             //gRCP
-            using var channel = GrpcChannel.ForAddress("https:localhost:7428");
+            using var channel = GrpcChannel.ForAddress("https://localhost:5001");
             var grpcClient = new Provider.ProviderClient(channel);
             serverServicesManager.SetGrpcClient(grpcClient);
-
-            var reply = await grpcClient.SendUserAsync(new User
-            {
-                UserName = "USUARIOPRUEBA"
-            });
 
             Console.WriteLine("Si desea iniciar la aplicacion con datos de prueba ingrese 1");
             Console.WriteLine("De lo contrario ingrese cualquier caracter");
@@ -244,7 +239,7 @@ namespace Server
                             {
                                 Console.WriteLine("Ingrese el nombre del usuario a modificar");
                                 String name = Console.ReadLine();
-                                serverServicesManager.ModifyUser(name);
+                                await serverServicesManager.ModifyUser(name);
                                 break;
                             }
                         case "5":

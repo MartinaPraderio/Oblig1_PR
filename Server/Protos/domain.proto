@@ -4,10 +4,13 @@ option csharp_namespace = "Server";
 
 package domain;
 
-
 service Provider {
 	rpc SendUser(User) returns (User);
+    rpc SendGame(Game) returns (Game);
+    rpc GetUser(InfoRequest) returns (User);
+    rpc ModifyUser(InfoRequest) returns (InfoRequest);
 }
+
 message Game {
   string Title = 1;
   enum GameGender
@@ -20,7 +23,7 @@ message Game {
         Deporte = 5;
     }
     GameGender Gender = 2;
-    repeated UserRating UserRatings = 3;
+    repeated ListOfUserRating UserRatings = 3;
     string Synopsis = 4;
     string Cover = 5;
     float RatingAverage = 6;
@@ -35,7 +38,6 @@ message ListOfGames {
   repeated Game games = 1;
 }
 
-
 message UserRating {
   string review = 1;
   
@@ -49,5 +51,17 @@ message UserRating {
     }
     GameCalification calification = 2;
     User user = 3;
-
 }
+
+message ListOfUserRating {
+  repeated UserRating userRatings = 1;
+}
+
+message Catalogue {
+  repeated ListOfGames Games = 1;
+}
+
+
+message InfoRequest {
+    string info = 1;
+} 
