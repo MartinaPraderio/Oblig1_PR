@@ -180,20 +180,25 @@ namespace Server
             }
             return response;
         }
-        public async Task <string> SearchGameByRating(string calification)
+        public async Task<string> SearchGameByRating(string calification)
         {
             Domain.Game aGame = new Domain.Game();
             GameCalification calif = ProtocolDataProgram.ParseGameCalification(calification);
             int calificationNumber = aGame.CalificationToInt(calif);
             var games = await grpcClient.GetGamesByCalificationAsync(new InfoRequest
             {
-                Info = calification
+                Info = calificationNumber.ToString()
             });
             string response = "";
             if (games.Games_.Count != 0)
             {
-               //string serializedList =  ProtocolDataProgram.SerializeGameList(games.Games_);
-               //response = "E" + Environment.NewLine + serializedList;
+                List<Domain.Game> result = new List<Domain.Game>();
+                foreach (Game pGame in games.Games_)
+                {
+                    result.Add(ProtoDomainParsing.ParseProtoGame(pGame));
+                }
+                string serializedList = ProtocolDataProgram.SerializeGameList(result);
+                response = "E" + Environment.NewLine + serializedList;
             }
             else
             {
@@ -201,6 +206,7 @@ namespace Server
             }
             return response;
         }
+
 
         public string QualifyGame(string message)
         {
