@@ -85,7 +85,7 @@ namespace Domain
             return result;
         }
 
-        public GameCalification CalculateAverageCalification()
+        public  GameCalification CalculateAverageCalification()
         {
             GameCalification calification = GameCalification.Sin_Calificaciones;
             switch (Math.Truncate(this.RatingAverage))

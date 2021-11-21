@@ -5,6 +5,7 @@ using ProtocolData;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
+using Google.Protobuf.Collections;
 
 namespace Server
 {
@@ -28,33 +29,40 @@ namespace Server
             _tcpListener = tcpListener;
         }
 
-        public async Task<string> PublishGameAsync(Domain.Game newGame, TcpClient tcpClient) {
+        public async Task<string> PublishGameAsync(Game newGame, TcpClient tcpClient) {
             this.fileCommunication = new FileCommunicationHandler(tcpClient);
             await fileCommunication.ReceiveFileAsync();
 
-            lock (this.gameCatalogue.Games)
+            RepeatedField<ListOfUserRating> gameUserRatings = newGame.UserRatings;
+
+            var reply = await grpcClient.SendGameAsync(new Game
             {
-                this.gameCatalogue.AddGame(newGame);
-            }
+                Title = newGame.Title,
+                Gender = newGame.Gender,
+                UserRatings = { gameUserRatings },
+                Synopsis = newGame.Synopsis,
+                Cover = newGame.Cover
+            });
             return "Juego agregado con exito";
         }
 
-        public string GameDetails(string message) {
+        public async Task<string> GameDetails(string gameTitle) {
             string response = "";
-            lock (this.gameCatalogue.Games)
+
+            var game = await grpcClient.GetGameAsync(new InfoRequest
             {
-                Domain.Game game = gameCatalogue.FindGame(message);
-            
-                if (game != null)
-                {
-                    response = "E" + Environment.NewLine + ProtocolDataProgram.SerializeGame(game);
-                }
-                else
-                {
-                    response = "N" + Environment.NewLine + "El juego que busca no existe";
-                }
+                Info = gameTitle
+            });
+
+            if (game != null)
+            {
+                response = "E" + Environment.NewLine + ProtocolDataProgram.SerializeGame(game);
             }
-            return response;
+            else
+            {
+                response = "N" + Environment.NewLine + "El juego que busca no existe";
+            }
+             return response;
         }
 
         public async Task<string> ViewCatalogue(){
@@ -115,34 +123,13 @@ namespace Server
             return reply.Info;
         }
 
-        public string Login(string message)
+        public async Task<string> Login(string message)
         {
-            lock (this.users)
+            var reply = await grpcClient.LoginAsync(new InfoRequest
             {
-                Domain.User user = this.users.Find(x => x.UserName.Equals(message));
-
-                string response = "";
-                if (user != null)
-                {
-                    lock (this.loggedUsers)
-                    {
-                        if (this.loggedUsers.Find(x => x.UserName.Equals(message)) != null)
-                        {
-                            response = "Ya existe una sesion con este usuario ";
-                        }
-                        else
-                        {
-                            response = "Login exitoso";
-                            this.loggedUsers.Add(user);
-                        }
-                    }
-                }
-                else
-                {
-                    response = "El usuario que ingresó no existe";
-                }
-                return response;
-            }
+                Info = message
+            });
+            return reply.Info;
         }
 
         public string ModifyGame(string message)
@@ -170,62 +157,65 @@ namespace Server
             }
         }
 
-        public string SearchGameByTitle(string message)
+        public async Task<string> SearchGameByTitle(string message)
         {
-            lock (this.gameCatalogue.Games)
+
+            var games = await grpcClient.GetGamesContainingAsync(new InfoRequest
             {
-                List<Domain.Game> games = gameCatalogue.FindAllGamesContaining(message);
-                string response = "";
-                if (games.Count != 0)
+                Info = message
+            });
+            string response = "";
+                if (games.Games_.Count != 0)
                 {
-                    string serializedList = ProtocolDataProgram.SerializeGameList(games);
-                    response = "E" + Environment.NewLine + serializedList;
+                   // string serializedList = ProtocolDataProgram.SerializeGameList(games.Games_);
+                   // response = "E" + Environment.NewLine + serializedList;
                 }
                 else
                 {
                     response = "N" + Environment.NewLine + "El juego que busca no existe";
                 }
                 return response;
-            }
         }
+        
 
-        public string SearchGameByGender(string message)
+        public async Task<string> SearchGameByGender(string message)
         {
-            lock (this.gameCatalogue.Games)
+            var games = await grpcClient.GetGamesByGenderAsync(new InfoRequest
             {
-                List<Domain.Game> games = gameCatalogue.FindAllGamesByGender(message);
-                string response = "";
-                if (games.Count != 0)
-                {
-                    string serializedList = ProtocolDataProgram.SerializeGameList(games);
-                    response = "E" + Environment.NewLine + serializedList;
-                }
-                else
-                {
-                    response = "N" + Environment.NewLine + "El juego que busca no existe";
-                }
-                return response;
+                Info = message
+            });
+             string response = "";
+            if (games.Games_.Count != 0)
+            {
+                //string serializedList = ProtocolDataProgram.SerializeGameList(games);
+                //response = "E" + Environment.NewLine + serializedList;
             }
+            else
+            {
+                response = "N" + Environment.NewLine + "El juego que busca no existe";
+            }
+            return response;
         }
-
-        public string SearchGameByRating(string calification)
+        public async Task <string> SearchGameByRating(string calification)
         {
+            Domain.Game aGame = new Domain.Game();
             GameCalification calif = ProtocolDataProgram.ParseGameCalification(calification);
-            lock (this.gameCatalogue.Games)
+            int calificationNumber = aGame.CalificationToInt(calif);
+            var games = await grpcClient.GetGamesByCalificationAsync(new InfoRequest
             {
-                List<Domain.Game> games = gameCatalogue.FindAllGames(calif);
-                string response = "";
-                if (games.Count != 0)
-                {
-                    string serializedList = ProtocolDataProgram.SerializeGameList(games);
-                    response = "E" + Environment.NewLine + serializedList;
-                }
-                else
-                {
-                    response = "N" + Environment.NewLine + "El juego que busca no existe";
-                }
-                return response;
+                Info = calification
+            });
+            string response = "";
+            if (games.Games_.Count != 0)
+            {
+               string serializedList =  ProtocolDataProgram.SerializeGameList(games.Games_);
+               response = "E" + Environment.NewLine + serializedList;
             }
+            else
+            {
+                response = "N" + Environment.NewLine + "El juego que busca no existe";
+            }
+            return response;
         }
 
         public string QualifyGame(string message)

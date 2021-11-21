@@ -1,6 +1,7 @@
 using Google.Protobuf.Collections;
 using Grpc.Core;
 using Microsoft.Extensions.Logging;
+using ProtocolData;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,6 +19,39 @@ namespace GrpcServer.Services
         public ProviderService(ILogger<ProviderService> logger)
         {
             _logger = logger;
+        }
+
+        public override Task<InfoRequest> Login( InfoRequest username, Grpc.Core.ServerCallContext context)
+        {
+            lock (this.users.Users_)
+            {
+                User user = this.users.Users_.Where(x => x.UserName.Equals(username)).FirstOrDefault();
+
+                string response = "";
+                if (user != null)
+                {
+                    lock (this.loggedUsers)
+                    {
+                        if (this.loggedUsers.Users_.Where(x => x.UserName.Equals(username)).FirstOrDefault() != null)
+                        {
+                            response = "Ya existe una sesion con este usuario ";
+                        }
+                        else
+                        {
+                            response = "Login exitoso";
+                            this.loggedUsers.Users_.Add(user);
+                        }
+                    }
+                }
+                else
+                {
+                    response = "El usuario que ingresó no existe";
+                }
+                return Task.FromResult(new InfoRequest
+                {
+                    Info = response
+                });
+            }
         }
         public override Task<User> SendUser(User user, Grpc.Core.ServerCallContext context)
         {
@@ -100,6 +134,10 @@ namespace GrpcServer.Services
         }
         public override Task<Game> SendGame(Game game, Grpc.Core.ServerCallContext context)
         {
+            lock (this.gameCatalogue.Games)
+            {
+                this.gameCatalogue.Games.Add(game);
+            }
             RepeatedField<GrpcServer.ListOfUserRating> gameUserRatings = game.UserRatings;
             return Task.FromResult(new Game
             {
@@ -109,6 +147,53 @@ namespace GrpcServer.Services
                 Synopsis = game.Synopsis,
                 Cover = game.Cover
             });
+        }
+
+        public override Task<Game> GetGame(InfoRequest gameTitle, Grpc.Core.ServerCallContext context)
+        {
+            Game aGame;
+            lock (this.gameCatalogue.Games)
+            {
+                aGame = this.gameCatalogue.Games.Where(x => x.Title.Equals(gameTitle)).FirstOrDefault();
+            }
+            RepeatedField<GrpcServer.ListOfUserRating> gameUserRatings = aGame.UserRatings;
+            return Task.FromResult(new Game
+            {
+                Title = aGame.Title,
+                Gender = aGame.Gender,
+                UserRatings = { gameUserRatings },
+                Synopsis = aGame.Synopsis,
+                Cover = aGame.Cover
+            });
+        }
+
+        public override Task<InfoRequest> ModifyGame(InfoRequest game, Grpc.Core.ServerCallContext context)
+        {
+            string[] info = game.Info.Split(Environment.NewLine);
+
+            lock (this.gameCatalogue.Games)
+            {
+                Game aGame = gameCatalogue.Games.Where(x => x.Title.Equals(info[0])).FirstOrDefault();
+                string response = "";
+                if (aGame != null)
+                {
+                    Game newGameValues; // = JSON.stringify(info[1]);
+                    //Game newGameValues = ProtocolDataProgram.DeserializeGame(info[1]);
+
+                    //aGame.Title = newGameValues.Title;
+                    //aGame.Gender = newGameValues.Gender;
+                    //aGame.Synopsis = newGameValues.Synopsis;
+                    //response = "El juego fue modificado.";
+                }
+                else
+                {
+                    response = "El juego que quiere modificar no existe";
+                }
+                return Task.FromResult(new InfoRequest
+                {
+                    Info = response
+                });
+            }
         }
 
         public override Task<InfoRequest> DeleteGame(InfoRequest request, Grpc.Core.ServerCallContext context)
@@ -130,6 +215,30 @@ namespace GrpcServer.Services
                 }
                 return Task.FromResult(new InfoRequest { Info = response });
             }
+        }
+        public override Task<Games> GetGamesContaining(InfoRequest request, Grpc.Core.ServerCallContext context)
+        {
+            RepeatedField<GrpcServer.Game> games = (RepeatedField<GrpcServer.Game>)gameCatalogue.Games.Where(x => x.Title.Equals(request.Info));
+            return Task.FromResult(new Games
+            {
+                Games_ = { games }
+            });
+        }
+        public override Task<Games> GetGamesByGender(InfoRequest request, Grpc.Core.ServerCallContext context)
+        {
+            RepeatedField<GrpcServer.Game> games = (RepeatedField<GrpcServer.Game>)gameCatalogue.Games.Where(x => x.Gender.ToString().Equals(request.Info));
+            return Task.FromResult(new Games
+            {
+                Games_ = { games }
+            });
+        }
+        public override Task<Games> GetGamesByCalification(InfoRequest request, Grpc.Core.ServerCallContext context)
+        {
+            RepeatedField<GrpcServer.Game> games = (RepeatedField<GrpcServer.Game>)gameCatalogue.Games.Where((x => Math.Truncate(x.RatingAverage).ToString().Equals(request.Info)));
+            return Task.FromResult(new Games
+            {
+                Games_ = { games }
+            });
         }
         public override Task<Catalogue> GetCatalogue(InfoRequest request, Grpc.Core.ServerCallContext context)
         {

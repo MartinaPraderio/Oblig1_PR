@@ -5,8 +5,15 @@ option csharp_namespace = "GrpcServer";
 package domain;
 
 service Provider {
+    rpc Login(InfoRequest) returns (InfoRequest);
+
     rpc SendGame(Game) returns (Game);
+    rpc GetGame(InfoRequest) returns (Game);
+    rpc ModifyGame(InfoRequest) returns (InfoRequest);
     rpc DeleteGame(InfoRequest) returns (InfoRequest);
+    rpc GetGamesContaining (InfoRequest) returns (Games);
+    rpc GetGamesByGender (InfoRequest) returns (Games);
+    rpc GetGamesByCalification (InfoRequest) returns (Games);
 
     rpc SendUser(User) returns (User);
     rpc GetUser(InfoRequest) returns (User);
@@ -33,6 +40,10 @@ message Game {
     string Synopsis = 4;
     string Cover = 5;
     float RatingAverage = 6;
+}
+
+message Games {
+    repeated Game Games = 1;
 }
 
 message User {
