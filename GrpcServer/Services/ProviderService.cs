@@ -19,34 +19,26 @@ namespace GrpcServer.Services
         {
             _logger = logger;
         }
-        public override Task<User> SendUser(User user, Grpc.Core.ServerCallContext context)
-        {
-            lock (this.users)
-            {
-                this.users.Add(user);
-            }
-            Console.WriteLine("user agregado " + users.First().ToString());
-            RepeatedField<GrpcServer.ListOfGames> userGames = user.Games;
-            return Task.FromResult(new User
-            {
-                UserName = user.UserName,
-                Games = { userGames }
-            });
-        }
-        public override Task<User> GetUser(InfoRequest userName, Grpc.Core.ServerCallContext context)
-        {
-            User aUser;
-            lock (this.users)
-            {
-              aUser = this.users.Find(x => x.UserName.Equals(userName));
-            }
-            RepeatedField<GrpcServer.ListOfGames> userGames = aUser.Games;
-            return Task.FromResult(new User
-            {
-                UserName = aUser.UserName,
-                Games = { userGames }
-            });
-        }
+
+        //public override Task<User> SendUser(User user, Grpc.Core.ServerCallContext context)
+        //{
+        //    lock (this.users)
+        //    {
+        //        this.users.Add(user);
+        //    }
+        //    Console.WriteLine("user agregado " + users.First().ToString());
+        //    RepeatedField<GrpcServer.Game> userGames = user.Games;
+        //    return Task.FromResult(new User
+        //    {
+        //        UserName = user.UserName,
+        //        Games = { userGames }
+        //    });
+        //}
+
+        //public override Task<listo> GetUsers(Grpc.Core.ServerCallContext context)
+        //{
+        //    return Task.FromResult((RepeatedField<User>) this.users);
+        //}
 
         public override Task<InfoRequest> ModifyUser(InfoRequest userName, Grpc.Core.ServerCallContext context)
         {
@@ -72,6 +64,27 @@ namespace GrpcServer.Services
                 Synopsis = game.Synopsis,
                 Cover = game.Cover
             }); 
+        }
+
+        public override Task<InfoRequest> DeleteGame(InfoRequest request, Grpc.Core.ServerCallContext context)
+        {
+            lock (this.gameCatalogue.Games)
+            {
+                Game aGame = gameCatalogue.Games.Where(x => x.Title.Equals(request.Info)).FirstOrDefault();
+
+                string response = "";
+                if (aGame != null)
+                {
+
+                    this.gameCatalogue.Games.Remove(aGame);
+                    response = "El juego fue eliminado.";
+                }
+                else
+                {
+                    response = "El juego que quiere eliminar no existe";
+                }
+                return Task.FromResult(new InfoRequest { Info = response });
+            }
         }
     }
 }

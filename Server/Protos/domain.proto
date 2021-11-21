@@ -1,14 +1,23 @@
-﻿syntax = "proto3";
+﻿+syntax = "proto3";
 
 option csharp_namespace = "Server";
 
 package domain;
 
 service Provider {
-	rpc SendUser(User) returns (User);
-    rpc SendGame(Game) returns (Game);
+	
     rpc GetUser(InfoRequest) returns (User);
+    rpc SendUser(User) returns (User);
     rpc ModifyUser(InfoRequest) returns (InfoRequest);
+    rpc GetUsers() returns(ListOfUsers);
+
+    rpc GetGame(InfoRequest) returns (Game);
+    rpc SendGame(Game) returns (Game);
+    rpc DeleteGame(InfoRequest) returns (InfoRequest);
+}
+
+message ListOfUsers {
+    repeated User users = 1;
 }
 
 message Game {
@@ -31,11 +40,7 @@ message Game {
 
 message User {
   string UserName = 1;
-  repeated ListOfGames Games = 2;
-}
-
-message ListOfGames {
-  repeated Game games = 1;
+  repeated Game Games = 2;
 }
 
 message UserRating {
@@ -58,7 +63,7 @@ message ListOfUserRating {
 }
 
 message Catalogue {
-  repeated ListOfGames Games = 1;
+    repeated Game Games = 1;
 }
 
 

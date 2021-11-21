@@ -42,8 +42,9 @@ namespace Server
             string response = "";
             lock (this.gameCatalogue.Games)
             {
-                Domain.Game game = gameCatalogue.FindGame(message);
-            
+                Domain.Game game = gameCatalogue.ga.Find(x => x.Title.Equals(message));
+
+
                 if (game != null)
                 {
                     response = "E" + Environment.NewLine + ProtocolDataProgram.SerializeGame(game);
@@ -80,22 +81,14 @@ namespace Server
 
         public string DeleteGame(string message)
         {
-            lock (this.gameCatalogue.Games)
+            var reply = await grpcClient.DeleteGameAsync(new InfoRequest
             {
-                Domain.Game aGame = gameCatalogue.FindGame(message);
-                string response = "";
-                if (aGame != null)
-                {
+                Info = message
+            });
+            Console.WriteLine(reply.info);
+            
 
-                    this.gameCatalogue.Games.Remove(aGame);
-                    response = "El juego fue eliminado.";
-                }
-                else
-                {
-                    response = "El juego que quiere eliminar no existe";
-                }
-                return response;
-            }
+            
         }
 
         public string Login(string message)
@@ -379,18 +372,18 @@ namespace Server
             }
         }
 
-        public void ShowUsers()
+        public async Task ShowUsers()
         {
-            lock (this.users)
-            {
+            
                 Console.WriteLine("Usuarios registrados en el sistema:");
                 Console.WriteLine("");
-                foreach (Domain.User user in this.users)
+                var reply = await this.grpcClient.GetUsers();
+                foreach (User user in reply)
                 {
                     Console.WriteLine(user.UserName);
                 }
                 Console.WriteLine("-----------------------------------");
-            }
+    
         }
     }
 }
