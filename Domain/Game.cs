@@ -43,6 +43,10 @@ namespace Domain
             UpdateRatingAverage();
         }
 
+        public Game()
+        {
+        }
+
         public void AddRating(UserRating rating)
         {
             this.UserRatings.Add(rating);

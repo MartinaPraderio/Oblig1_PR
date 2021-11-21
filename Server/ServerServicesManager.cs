@@ -33,7 +33,7 @@ namespace Server
             this.fileCommunication = new FileCommunicationHandler(tcpClient);
             await fileCommunication.ReceiveFileAsync();
 
-            RepeatedField<ListOfUserRating> gameUserRatings = newGame.UserRatings;
+            RepeatedField<UserRating> gameUserRatings = newGame.UserRatings;
 
             var reply = await grpcClient.SendGameAsync(new Game
             {
@@ -56,7 +56,7 @@ namespace Server
 
             if (game != null)
             {
-                response = "E" + Environment.NewLine + ProtocolDataProgram.SerializeGame(game);
+               // response = "E" + Environment.NewLine + ProtocolDataProgram.SerializeGame(game);
             }
             else
             {
@@ -132,29 +132,13 @@ namespace Server
             return reply.Info;
         }
 
-        public string ModifyGame(string message)
+        public async Task<string> ModifyGame(string message)
         {
-            string[] info = message.Split(Environment.NewLine);
-            
-            lock (this.gameCatalogue.Games)
+            var reply = await grpcClient.ModifyGameAsync(new InfoRequest
             {
-                Domain.Game aGame = gameCatalogue.FindGame(info[0]);
-                string response = "";
-                if (aGame != null)
-                {
-                    Domain.Game newGameValues = ProtocolDataProgram.DeserializeGame(info[1]);
-
-                    aGame.Title = newGameValues.Title;
-                    aGame.Gender = newGameValues.Gender;
-                    aGame.Synopsis = newGameValues.Synopsis;
-                    response = "El juego fue modificado.";
-                }
-                else
-                {
-                    response = "El juego que quiere modificar no existe";
-                }
-                return response;
-            }
+                Info = message
+            });
+            return reply.Info;
         }
 
         public async Task<string> SearchGameByTitle(string message)
@@ -208,8 +192,8 @@ namespace Server
             string response = "";
             if (games.Games_.Count != 0)
             {
-               string serializedList =  ProtocolDataProgram.SerializeGameList(games.Games_);
-               response = "E" + Environment.NewLine + serializedList;
+               //string serializedList =  ProtocolDataProgram.SerializeGameList(games.Games_);
+               //response = "E" + Environment.NewLine + serializedList;
             }
             else
             {
@@ -250,64 +234,40 @@ namespace Server
             this.grpcClient = grpcClient;
         }
 
-        public void LogOut(string message)
+        public async Task LogOut(string message)
         {
-            lock (this.loggedUsers)
+            var response = await grpcClient.LogoutAsync(new InfoRequest
             {
-                Domain.User user = this.loggedUsers.Find(x => x.UserName.Equals(message));
-                if(user != null)
-                {
-                    loggedUsers.Remove(user);
-                }
-            }
+                Info = message
+            });
         }
 
-        public string ShowUserGames(string message)
+        public async Task<string> ShowUserGames(string message)
         {
             string response = "Lista de juegos:"+ Environment.NewLine;
-            lock (this.users)
+
+            var user = await grpcClient.GetUserAsync(new InfoRequest
             {
-                Domain.User aUser = this.users.Find(x => x.UserName.Equals(message));
-                foreach (Domain.Game aGame in aUser.Games)
-                {
-                    response += "-------------------"+ Environment.NewLine;
-                    response += "Nombre: " +aGame.Title+ Environment.NewLine;
-                    response += "Genero: " + aGame.Gender + Environment.NewLine;
-                    response += "Calificacion: " + aGame.CalculateAverageCalification() + Environment.NewLine;
-                }
-            }
+                Info = message
+            });
+            //foreach (Game aGame in aUser.Games)
+            //{
+            //    response += "-------------------"+ Environment.NewLine;
+            //    response += "Nombre: " +aGame.Title+ Environment.NewLine;
+            //    response += "Genero: " + aGame.Gender + Environment.NewLine;
+            //    response += "Calificacion: " + aGame.CalculateAverageCalification() + Environment.NewLine;
+            //}
+
             return response;
         }
-
-        public string BuyGame(string message)
+        public async Task <string> BuyGame(string message)
         {
-            string[] info = message.Split(Environment.NewLine);
-            string buyerName = info[0];
-            string gameName = info[1];
-            lock (this.gameCatalogue.Games)
+            var response = await grpcClient.BuyGameAsync(new InfoRequest
             {
-                string response = "";
-                
-
-                Domain.Game requestedGame = gameCatalogue.FindGame(gameName);
-                if (requestedGame != null)
-                {
-                    lock (this.users)
-                    {
-                        Domain.User buyer = this.users.Find(x => x.UserName.Equals(buyerName));
-                        buyer.AddGame(requestedGame);
-                    }
-                    response = "Su compra ha finalizado con exito";
-                }
-                else
-                {
-                    response = "El juego que desea adquirir no existe." + Environment.NewLine +
-                        "Asegurese de ingresar el nombre correctamente.";
-                }
-                return response;
-            }
+                Info = message
+            });
+            return response.Info;
         }
-
         public async Task<string> SendGameCoverAsync(string gameCover,TcpClient tcpClient)
         {
             string path = Directory.GetCurrentDirectory() + "\\" + gameCover;

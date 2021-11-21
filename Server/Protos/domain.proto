@@ -6,6 +6,8 @@ package domain;
 
 service Provider {
     rpc Login(InfoRequest) returns (InfoRequest);
+    rpc Logout(InfoRequest) returns (InfoRequest);
+    rpc LoadTestData (InfoRequest) returns (InfoRequest);
 
     rpc SendGame(Game) returns (Game);
     rpc GetGame(InfoRequest) returns (Game);
@@ -14,6 +16,8 @@ service Provider {
     rpc GetGamesContaining (InfoRequest) returns (Games);
     rpc GetGamesByGender (InfoRequest) returns (Games);
     rpc GetGamesByCalification (InfoRequest) returns (Games);
+    rpc BuyGame (InfoRequest) returns (InfoRequest);
+    rpc QualifyGame (InfoRequest) returns (InfoRequest);
 
     rpc SendUser(User) returns (User);
     rpc GetUser(InfoRequest) returns (User);
@@ -36,7 +40,7 @@ message Game {
         Deporte = 5;
     }
     GameGender Gender = 2;
-    repeated ListOfUserRating UserRatings = 3;
+    repeated UserRating UserRatings = 3;
     string Synopsis = 4;
     string Cover = 5;
     float RatingAverage = 6;
@@ -68,10 +72,6 @@ message UserRating {
     }
     GameCalification calification = 2;
     User user = 3;
-}
-
-message ListOfUserRating {
-  repeated UserRating userRatings = 1;
 }
 
 message Catalogue {
