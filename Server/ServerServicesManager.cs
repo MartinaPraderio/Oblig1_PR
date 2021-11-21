@@ -31,6 +31,7 @@ namespace Server
         public async Task<string> PublishGameAsync(Domain.Game newGame, TcpClient tcpClient) {
             this.fileCommunication = new FileCommunicationHandler(tcpClient);
             await fileCommunication.ReceiveFileAsync();
+
             lock (this.gameCatalogue.Games)
             {
                 this.gameCatalogue.AddGame(newGame);
@@ -57,10 +58,6 @@ namespace Server
         }
 
         public async Task<string> ViewCatalogue(){
-            //lock (this.gameCatalogue.Games)
-            //{
-            //    return gameCatalogue.DisplayGames();
-            //}
             var catalogue =  await grpcClient.GetCatalogueAsync(new InfoRequest
             {
                 Info = "Ver Catalogo"
@@ -106,12 +103,6 @@ namespace Server
             {
                 UserName = name
             });
-            //Console.WriteLine(reply.UserName);
-
-            //lock (this.users)
-            //{
-            //    this.users.Add(newUser);
-            //}
             return reply.ToString();
         }
 

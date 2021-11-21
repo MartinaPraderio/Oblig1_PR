@@ -5,10 +5,10 @@ option csharp_namespace = "GrpcServer";
 package domain;
 
 service Provider {
-	rpc SendUser(User) returns (User);
     rpc SendGame(Game) returns (Game);
     rpc DeleteGame(InfoRequest) returns (InfoRequest);
 
+    rpc SendUser(User) returns (User);
     rpc GetUser(InfoRequest) returns (User);
     rpc ModifyUser(InfoRequest) returns (InfoRequest);
     rpc DeleteUser(InfoRequest) returns (InfoRequest);
