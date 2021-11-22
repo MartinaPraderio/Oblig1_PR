@@ -22,9 +22,6 @@ namespace LoggAPI
         private static IModel channel;
         public static void Main(string[] args)
         {
-            //var factory = new ConnectionFactory { HostName = "localhost" };
-            //using IConnection connection = factory.CreateConnection();
-            //channel = connection.CreateModel();
             channel = Repository.Lists.channel;
             DeclareQueue(channel);
             Messages.ReceiveMessages();
@@ -37,6 +34,7 @@ namespace LoggAPI
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
                     webBuilder.UseStartup<Startup>();
+                    webBuilder.UseUrls("https://localhost:5040");
                 });
         private static void DeclareQueue(IModel channel)
         {

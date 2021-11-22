@@ -45,59 +45,70 @@ namespace GrpcServer.Services
         }
         public override Task<InfoRequest> Login( InfoRequest request, Grpc.Core.ServerCallContext context)
         {
+            Domain.User user = null;
             lock (Repository.Lists.users)
             {
-                Domain.User user = Repository.Lists.users.Find(x => x.UserName.Equals(request.Info));
-
-                string response = "";
-                if (user != null)
+                user = Repository.Lists.users.Find(x => x.UserName.Equals(request.Info));
+            }
+            string response = "";
+            if (user != null)
+            {
+                Domain.User loggedUser = null;
+                lock (Repository.Lists.loggedUsers)
                 {
-                    lock (Repository.Lists.loggedUsers)
-                    {
-                        if (Repository.Lists.loggedUsers.Find(x => x.UserName.Equals(request.Info)) != null)
-                        {
-                            response = "Ya existe una sesion con este usuario ";
-                        }
-                        else
-                        {
-                            response = "Login exitoso";
-                            Repository.Lists.loggedUsers.Add(user);
-                        }
-                    }
+                    loggedUser = Repository.Lists.loggedUsers.Find(x => x.UserName.Equals(request.Info));
+                }
+                if (loggedUser != null)
+                {
+                    response = "Ya existe una sesion con este usuario ";
                 }
                 else
                 {
-                    response = "El usuario que ingresó no existe";
+                    response = "Login exitoso";
+                    lock (Repository.Lists.loggedUsers)
+                    {
+                        Repository.Lists.loggedUsers.Add(user);
+                    }
                 }
-                Logg logg = new Logg
-                {
-                    User = request.Info,
-                    Action = response,
-                    Date = DateTime.Now
-                };
-                Program.PublishMessage(ChannelComunication._channel, logg);
-                return Task.FromResult(new InfoRequest
-                {
-                    Info = response
-                });
             }
+            else
+            {
+                response = "El usuario que ingresó no existe";
+            }
+            Logg logg = new Logg
+            {
+                User = request.Info,
+                Action = response,
+                Date = DateTime.Now
+            };
+            Program.PublishMessage(ChannelComunication._channel, logg);
+            return Task.FromResult(new InfoRequest
+            {
+                Info = response
+            });
+            
         }
         public override Task<InfoRequest> Logout (InfoRequest request, Grpc.Core.ServerCallContext context)
         {
             string response = "";
+            Domain.User user = null;
             lock (Repository.Lists.loggedUsers)
             {
-                Domain.User user = Repository.Lists.loggedUsers.Find(x => x.UserName.Equals(request.Info));
-                if (user != null)
+                user = Repository.Lists.loggedUsers.Find(x => x.UserName.Equals(request.Info));
+            }   
+            if (user != null)
+            {
+                lock (Repository.Lists.loggedUsers)
                 {
                     Repository.Lists.loggedUsers.Remove(user);
-                    response = "Sesion terminada exitosamente";
                 }
-                else
-                {
-                    response = "Este usuario no existe en el sistema";
-                }
+                response = "Sesion terminada exitosamente";
             }
+            else
+            {
+                response = "Este usuario no existe en el sistema";
+            }
+            
             Logg logg = new Logg
             {
                 User = request.Info,
@@ -156,13 +167,13 @@ namespace GrpcServer.Services
 
         public override Task<InfoRequest> ModifyUser(InfoRequest request, Grpc.Core.ServerCallContext context)
         {
-            Domain.User aUser;
+            Domain.User aUser = null;
             string[] names = request.Info.Split(Environment.NewLine);
             lock (Repository.Lists.users)
             {
                 aUser = Repository.Lists.users.Find(x => x.UserName.Equals(names[0]));
-                aUser.UserName = names[1];
             }
+            aUser.UserName = names[1];
             Logg logg = new Logg
             {
                 User = request.Info,
@@ -272,101 +283,109 @@ namespace GrpcServer.Services
         {
             string[] info = request.Info.Split(Environment.NewLine);
 
+            Domain.Game aGame = null;
             lock (Repository.Lists.gameCatalogue)
             {
-                Domain.Game aGame = Repository.Lists.gameCatalogue.Find(x => x.Title.Equals(info[0]));
-                string response = "";
-                if (aGame != null)
+                aGame = Repository.Lists.gameCatalogue.Find(x => x.Title.Equals(info[0]));
+            }
+            string response = "";
+            if (aGame != null)
+            {
+                Domain.Game newGameValues = ProtocolDataProgram.DeserializeGame(info[1]);
+                lock (Repository.Lists.gameCatalogue)
                 {
-                    //Game newGameValues; // = JSON.stringify(info[1]);
-                    Domain.Game newGameValues = ProtocolDataProgram.DeserializeGame(info[1]);
-
                     aGame.Title = newGameValues.Title;
                     aGame.Gender = newGameValues.Gender;
                     aGame.Synopsis = newGameValues.Synopsis;
-                    response = "El juego fue modificado.";
-                    Logg logg = new Logg
-                    {
-                        Game = aGame.Title,
-                        Action = response,
-                        Date = DateTime.Now
-                    };
-                    Program.PublishMessage(ChannelComunication._channel, logg);
                 }
-                else
+                response = "El juego fue modificado.";
+                Logg logg = new Logg
                 {
-                    response = "El juego que quiere modificar no existe";
-                }
-                return Task.FromResult(new InfoRequest
-                {
-                    Info = response
-                });
+                    Game = aGame.Title,
+                    Action = response,
+                    Date = DateTime.Now
+                };
+                Program.PublishMessage(ChannelComunication._channel, logg);
             }
+            else
+            {
+                response = "El juego que quiere modificar no existe";
+            }
+            return Task.FromResult(new InfoRequest
+            {
+                Info = response
+            });
+            
         }
 
         public override Task<InfoRequest> DeleteGame(InfoRequest request, Grpc.Core.ServerCallContext context)
         {
+            Domain.Game aGame = null;
             lock (Repository.Lists.gameCatalogue)
             {
-                Domain.Game aGame = Repository.Lists.gameCatalogue.Find(x => x.Title.Equals(request.Info));
-
-                string response = "";
-                if (aGame != null)
+                aGame = Repository.Lists.gameCatalogue.Find(x => x.Title.Equals(request.Info));
+            }
+            string response = "";
+            if (aGame != null)
+            {
+                lock (Repository.Lists.gameCatalogue)
                 {
                     Repository.Lists.gameCatalogue.Remove(aGame);
-                    response = "El juego fue eliminado.";
-                    Logg logg = new Logg
-                    {
-                        Game = aGame.Title,
-                        Action = response,
-                        Date = DateTime.Now
-                    };
-                    Program.PublishMessage(ChannelComunication._channel, logg);
                 }
-                else
+                response = "El juego fue eliminado.";
+                Logg logg = new Logg
                 {
-                    response = "El juego que quiere eliminar no existe";
-                }
-                return Task.FromResult(new InfoRequest { Info = response });
+                    Game = aGame.Title,
+                    Action = response,
+                    Date = DateTime.Now
+                };
+                Program.PublishMessage(ChannelComunication._channel, logg);
             }
+            else
+            {
+                response = "El juego que quiere eliminar no existe";
+            }
+            return Task.FromResult(new InfoRequest { Info = response });
+            
         }
         public override Task<InfoRequest> BuyGame(InfoRequest request, Grpc.Core.ServerCallContext context)
         {
             string[] info = request.Info.Split(Environment.NewLine);
             string buyerName = info[0];
             string gameName = info[1];
+            Domain.Game requestedGame = null;
+            string response = "";
             lock (Repository.Lists.gameCatalogue)
             {
-                string response = "";
-
-                Domain.Game requestedGame = Repository.Lists.gameCatalogue.Find(x => x.Title.Equals(gameName));
-                if (requestedGame != null)
-                {
-                    lock (Repository.Lists.users)
-                    {
-                        Domain.User buyer = Repository.Lists.users.Find(x => x.UserName.Equals(buyerName));
-                        buyer.Games.Add(requestedGame);
-                    }
-                    response = "Su compra ha finalizado con exito";
-                }
-                else
-                {
-                    response = "El juego que desea adquirir no existe." + Environment.NewLine +
-                        "Asegurese de ingresar el nombre correctamente.";
-                }
-                Logg logg = new Logg
-                {
-                    Game = gameName,
-                    User = buyerName,
-                    Action = response,
-                    Date = DateTime.Now
-                };
-                Program.PublishMessage(ChannelComunication._channel, logg);
-                return Task.FromResult(new InfoRequest
-                {
-                    Info = response
-                });
+                requestedGame = Repository.Lists.gameCatalogue.Find(x => x.Title.Equals(gameName));
             }
+            if (requestedGame != null)
+            {
+                lock (Repository.Lists.users)
+                {
+                    Domain.User buyer = Repository.Lists.users.Find(x => x.UserName.Equals(buyerName));
+                    buyer.Games.Add(requestedGame);
+                }
+                response = "Su compra ha finalizado con exito";
+            }
+            else
+            {
+                response = "El juego que desea adquirir no existe." + Environment.NewLine +
+                    "Asegurese de ingresar el nombre correctamente.";
+            }
+            Logg logg = new Logg
+            {
+                Game = gameName,
+                User = buyerName,
+                Action = response,
+                Date = DateTime.Now
+            };
+            Program.PublishMessage(ChannelComunication._channel, logg);
+            return Task.FromResult(new InfoRequest
+            {
+                Info = response
+            });
+            
         }
         public override Task<InfoRequest> QualifyGame (InfoRequest request, Grpc.Core.ServerCallContext context)
         {
@@ -399,40 +418,53 @@ namespace GrpcServer.Services
                 calification = Domain.GameCalification.Sin_Calificaciones;
             }
             string review = info[3];
+            Domain.Game gameToQualify = null;
             lock (Repository.Lists.gameCatalogue)
             {
-                Domain.Game gameToQualify = Repository.Lists.gameCatalogue.Find(x => x.Title.Equals(gameTitle));
-                string addRatingResponse = "";
-                if (gameToQualify != null)
-                {
-                    Domain.User reviewer = Repository.Lists.users.Find(x => x.UserName.Equals(userName));
-                    Domain.UserRating newRating = new Domain.UserRating(review, calification,reviewer);
-                    gameToQualify.UserRatings.Add(newRating);
-                    addRatingResponse = "Su review fue publicada con exito.";
-                    Logg logg = new Logg
-                    {
-                        Game = gameToQualify.Title,
-                        User = reviewer.UserName,
-                        Action = addRatingResponse,
-                        Date = DateTime.Now
-                    };
-                    Program.PublishMessage(ChannelComunication._channel, logg);
-                }
-                else
-                {
-                    addRatingResponse = "El juego que desea calificar no existe." + Environment.NewLine +
-                        "Asegurese de ingresar el nombre correctamente.";
-                }
-
-                return Task.FromResult(new InfoRequest
-                {
-                    Info = addRatingResponse
-                });
+                gameToQualify = Repository.Lists.gameCatalogue.Find(x => x.Title.Equals(gameTitle));
             }
+            string addRatingResponse = "";
+            if (gameToQualify != null)
+            {
+                Domain.User reviewer = null;
+                lock (Repository.Lists.users)
+                {
+                    reviewer = Repository.Lists.users.Find(x => x.UserName.Equals(userName));
+                }
+                Domain.UserRating newRating = new Domain.UserRating(review, calification,reviewer);
+                lock (Repository.Lists.gameCatalogue)
+                {
+                    gameToQualify.UserRatings.Add(newRating);
+                }
+                addRatingResponse = "Su review fue publicada con exito.";
+                Logg logg = new Logg
+                {
+                    Game = gameToQualify.Title,
+                    User = reviewer.UserName,
+                    Action = addRatingResponse,
+                    Date = DateTime.Now
+                };
+                Program.PublishMessage(ChannelComunication._channel, logg);
+            }
+            else
+            {
+                addRatingResponse = "El juego que desea calificar no existe." + Environment.NewLine +
+                    "Asegurese de ingresar el nombre correctamente.";
+            }
+
+            return Task.FromResult(new InfoRequest
+            {
+                Info = addRatingResponse
+            });
+            
         }
         public override Task<Games> GetGamesContaining(InfoRequest request, Grpc.Core.ServerCallContext context)
         {
-            List<Domain.Game> games = Repository.Lists.gameCatalogue.FindAll(x => x.Title.Equals(request.Info));
+            List<Domain.Game> games = null;
+            lock (Repository.Lists.gameCatalogue)
+            {
+                games = Repository.Lists.gameCatalogue.FindAll(x => x.Title.Equals(request.Info));
+            }
             Games pGames = new Games
             {
                 Games_ = { ProtoDomainParsing.ParseDomainGameList(games) }
@@ -448,7 +480,10 @@ namespace GrpcServer.Services
         }
         public override Task<Games> GetGamesByGender(InfoRequest request, Grpc.Core.ServerCallContext context)
         {
-            List<Domain.Game> games = Repository.Lists.gameCatalogue.FindAll(x => x.Gender.ToString().Equals(request.Info));
+            List<Domain.Game> games = null;
+            lock (Repository.Lists.gameCatalogue) { 
+                games = Repository.Lists.gameCatalogue.FindAll(x => x.Gender.ToString().Equals(request.Info));
+            }
             Logg logg = new Logg
             {
                 Game = request.Info,
@@ -463,7 +498,10 @@ namespace GrpcServer.Services
         }
         public override Task<Games> GetGamesByCalification(InfoRequest request, Grpc.Core.ServerCallContext context)
         {
-            List<Domain.Game> games = Repository.Lists.gameCatalogue.FindAll((x => Math.Truncate(x.RatingAverage).ToString().Equals(request.Info)));
+            List<Domain.Game> games = null;
+            lock (Repository.Lists.gameCatalogue) { 
+                games = Repository.Lists.gameCatalogue.FindAll((x => Math.Truncate(x.RatingAverage).ToString().Equals(request.Info)));
+            }
             Logg logg = new Logg
             {
                 Game = request.Info,
