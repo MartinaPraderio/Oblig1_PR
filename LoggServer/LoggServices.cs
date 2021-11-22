@@ -18,6 +18,10 @@ namespace LoggServer
         }
         public List<Logg> loggs = new List<Logg>();
 
+        public void AddLogg(Logg logg)
+        {
+            loggs.Add(logg);
+        }
         public IEnumerable<Logg> GetAll(string user, string game, string date)
         {
             LoggProgram.ReceiveMessages();

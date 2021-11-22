@@ -4,6 +4,7 @@ using System.Text;
 
 namespace LoggServer
 {
+    [Serializable]
     public class Logg
     {
         public string Game { get; set; }

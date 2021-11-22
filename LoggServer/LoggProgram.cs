@@ -3,6 +3,7 @@ using RabbitMQ.Client.Events;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 
@@ -52,7 +53,10 @@ namespace LoggServer
                 byte[] body = ea.Body.ToArray();
                 string message = Encoding.UTF8.GetString(body);
                 Logg logg = ByteArrayToLogg(body);
-                LoggServices.Instance().loggs.Add(logg);
+                Console.WriteLine("logg agregado " + logg);
+                LoggServices.Instance().AddLogg(logg);
+                Console.WriteLine("cantidad de loggs " + LoggServices.Instance().loggs.Count());
+
             };
             channel.BasicConsume(
                 queue: loggsQueue,

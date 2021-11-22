@@ -69,6 +69,13 @@ namespace GrpcServer.Services
                 {
                     response = "El usuario que ingresó no existe";
                 }
+                Logg logg = new Logg
+                {
+                    User = request.Info,
+                    Action = response,
+                    Date = DateTime.Now
+                };
+                Program.PublishMessage(ChannelComunication._channel, logg);
                 return Task.FromResult(new InfoRequest
                 {
                     Info = response
@@ -93,7 +100,7 @@ namespace GrpcServer.Services
             }
             Logg logg = new Logg
             {
-                User = username.Info,
+                User = request.Info,
                 Action = response,
                 Date = DateTime.Now
             };
@@ -109,8 +116,15 @@ namespace GrpcServer.Services
             {
                 Repository.Lists.users.Add(ProtoDomainParsing.ParseProtoUser(user));
             }
-            Console.WriteLine("user agregado " + Repository.Lists.users.First().ToString());
             RepeatedField<GrpcServer.Game> userGames = user.Games;
+            Logg logg = new Logg
+            {
+                User = user.UserName,
+                Game = "",
+                Action = "Usuario agregado al sistema",
+                Date = DateTime.Now
+            };
+            Program.PublishMessage(ChannelComunication._channel, logg);
             return Task.FromResult(new User
             {
                 UserName = user.UserName,
@@ -126,6 +140,13 @@ namespace GrpcServer.Services
             }
             
             RepeatedField<GrpcServer.Game> userGames = ProtoDomainParsing.ParseDomainGameList(aUser.Games);
+            Logg logg = new Logg
+            {
+                User = request.Info,
+                Action = "Obtencion de usuario del sistema",
+                Date = DateTime.Now
+            };
+            Program.PublishMessage(ChannelComunication._channel, logg);
             return Task.FromResult(new User
             {
                 UserName = aUser.UserName,
@@ -142,6 +163,13 @@ namespace GrpcServer.Services
                 aUser = Repository.Lists.users.Find(x => x.UserName.Equals(names[0]));
                 aUser.UserName = names[1];
             }
+            Logg logg = new Logg
+            {
+                User = request.Info,
+                Action = "Modificacion del usuario del sistema",
+                Date = DateTime.Now
+            };
+            Program.PublishMessage(ChannelComunication._channel, logg);
             return Task.FromResult(new InfoRequest
             {
                 Info = "El usuario fue modificado con exito."
@@ -176,7 +204,14 @@ namespace GrpcServer.Services
             else
             {
                 response = "El usuario que intenta eliminar no existe.";
-            }           
+            }
+            Logg logg = new Logg
+            {
+                User = request.Info,
+                Action = response,
+                Date = DateTime.Now
+            };
+            Program.PublishMessage(ChannelComunication._channel, logg);
             return Task.FromResult(new InfoRequest
             {
                 Info = response
@@ -189,6 +224,13 @@ namespace GrpcServer.Services
                 Repository.Lists.gameCatalogue.Add(ProtoDomainParsing.ParseProtoGame(game));
             }
             RepeatedField<GrpcServer.UserRating> gameUserRatings = game.UserRatings;
+            Logg logg = new Logg
+            {
+                Game = game.Title,
+                Action = "Juego agregado al sistema",
+                Date = DateTime.Now
+            };
+            Program.PublishMessage(ChannelComunication._channel, logg);
             return Task.FromResult(new Game
             {
                 Title = game.Title,
@@ -207,7 +249,7 @@ namespace GrpcServer.Services
                 aGame = Repository.Lists.gameCatalogue.Find(x => x.Title.Equals(request.Info));
             }
             if (aGame == null)
-            {
+            { 
                 return Task.FromResult(new Game
                 {
 
@@ -215,6 +257,13 @@ namespace GrpcServer.Services
             }
             else
             {
+                Logg logg = new Logg
+                {
+                    Game = aGame.Title,
+                    Action = "Juego obtenido del sistema",
+                    Date = DateTime.Now
+                };
+                Program.PublishMessage(ChannelComunication._channel, logg);
                 return Task.FromResult(ProtoDomainParsing.ParseDomainGame(aGame));
             }
         }
@@ -236,6 +285,13 @@ namespace GrpcServer.Services
                     aGame.Gender = newGameValues.Gender;
                     aGame.Synopsis = newGameValues.Synopsis;
                     response = "El juego fue modificado.";
+                    Logg logg = new Logg
+                    {
+                        Game = aGame.Title,
+                        Action = response,
+                        Date = DateTime.Now
+                    };
+                    Program.PublishMessage(ChannelComunication._channel, logg);
                 }
                 else
                 {
@@ -257,9 +313,15 @@ namespace GrpcServer.Services
                 string response = "";
                 if (aGame != null)
                 {
-
                     Repository.Lists.gameCatalogue.Remove(aGame);
                     response = "El juego fue eliminado.";
+                    Logg logg = new Logg
+                    {
+                        Game = aGame.Title,
+                        Action = response,
+                        Date = DateTime.Now
+                    };
+                    Program.PublishMessage(ChannelComunication._channel, logg);
                 }
                 else
                 {
@@ -292,6 +354,14 @@ namespace GrpcServer.Services
                     response = "El juego que desea adquirir no existe." + Environment.NewLine +
                         "Asegurese de ingresar el nombre correctamente.";
                 }
+                Logg logg = new Logg
+                {
+                    Game = gameName,
+                    User = buyerName,
+                    Action = response,
+                    Date = DateTime.Now
+                };
+                Program.PublishMessage(ChannelComunication._channel, logg);
                 return Task.FromResult(new InfoRequest
                 {
                     Info = response
@@ -339,12 +409,21 @@ namespace GrpcServer.Services
                     Domain.UserRating newRating = new Domain.UserRating(review, calification,reviewer);
                     gameToQualify.UserRatings.Add(newRating);
                     addRatingResponse = "Su review fue publicada con exito.";
+                    Logg logg = new Logg
+                    {
+                        Game = gameToQualify.Title,
+                        User = reviewer.UserName,
+                        Action = addRatingResponse,
+                        Date = DateTime.Now
+                    };
+                    Program.PublishMessage(ChannelComunication._channel, logg);
                 }
                 else
                 {
                     addRatingResponse = "El juego que desea calificar no existe." + Environment.NewLine +
                         "Asegurese de ingresar el nombre correctamente.";
                 }
+
                 return Task.FromResult(new InfoRequest
                 {
                     Info = addRatingResponse
@@ -358,11 +437,25 @@ namespace GrpcServer.Services
             {
                 Games_ = { ProtoDomainParsing.ParseDomainGameList(games) }
             };
+            Logg logg = new Logg
+            {
+                Game = request.Info,
+                Action = "Obtencion de lista de juegos por titulo",
+                Date = DateTime.Now
+            };
+            Program.PublishMessage(ChannelComunication._channel, logg);
             return Task.FromResult(pGames);
         }
         public override Task<Games> GetGamesByGender(InfoRequest request, Grpc.Core.ServerCallContext context)
         {
             List<Domain.Game> games = Repository.Lists.gameCatalogue.FindAll(x => x.Gender.ToString().Equals(request.Info));
+            Logg logg = new Logg
+            {
+                Game = request.Info,
+                Action = "Obtencion de la lista de juegos por genero",
+                Date = DateTime.Now
+            };
+            Program.PublishMessage(ChannelComunication._channel, logg);
             return Task.FromResult(new Games
             {
                 Games_ = { ProtoDomainParsing.ParseDomainGameList(games)}
@@ -371,6 +464,13 @@ namespace GrpcServer.Services
         public override Task<Games> GetGamesByCalification(InfoRequest request, Grpc.Core.ServerCallContext context)
         {
             List<Domain.Game> games = Repository.Lists.gameCatalogue.FindAll((x => Math.Truncate(x.RatingAverage).ToString().Equals(request.Info)));
+            Logg logg = new Logg
+            {
+                Game = request.Info,
+                Action = "Obtencion de la lista de juegos por calificacion",
+                Date = DateTime.Now
+            };
+            Program.PublishMessage(ChannelComunication._channel, logg);
             return Task.FromResult(new Games
             {
                 Games_ = { ProtoDomainParsing.ParseDomainGameList(games)}
@@ -378,11 +478,23 @@ namespace GrpcServer.Services
         }
         public override Task<Catalogue> GetCatalogue(InfoRequest request, Grpc.Core.ServerCallContext context)
         {
+            Logg logg = new Logg
+            {
+                Action = "Obtencion del catalogo de juegos",
+                Date = DateTime.Now
+            };
+            Program.PublishMessage(ChannelComunication._channel, logg);
             return Task.FromResult(ProtoDomainParsing.ParseDomainCatalogue(Repository.Lists.gameCatalogue));
         }
         public override Task<Users> GetUsers(InfoRequest request, Grpc.Core.ServerCallContext context)
         {
             RepeatedField<GrpcServer.User> users = ProtoDomainParsing.ParseDomainUserList(Repository.Lists.users);
+            Logg logg = new Logg
+            {
+                Action = "Obtencion de la lista de usuarios",
+                Date = DateTime.Now
+            };
+            Program.PublishMessage(ChannelComunication._channel, logg);
             return Task.FromResult(new Users
             {
                 Users_ = { users }
@@ -403,6 +515,13 @@ namespace GrpcServer.Services
             }
             else
             {
+                Logg logg = new Logg
+                {
+                    User = request.Info,
+                    Action = "Existencia del usuario",
+                    Date = DateTime.Now
+                };
+                Program.PublishMessage(ChannelComunication._channel, logg);
                 response = "true";
             }
             return Task.FromResult(new InfoRequest
@@ -418,6 +537,13 @@ namespace GrpcServer.Services
                 Repository.Lists.gameCatalogue.Remove(gameToUpdate);
                 Repository.Lists.gameCatalogue.Add(ProtoDomainParsing.ParseProtoGame(game));
             }
+            Logg logg = new Logg
+            {
+                Game = game.Title,
+                Action = "Juego modificado",
+                Date = DateTime.Now
+            };
+            Program.PublishMessage(ChannelComunication._channel, logg);
             return Task.FromResult(new InfoRequest
             {
                 Info = "Actualizado"

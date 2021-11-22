@@ -289,14 +289,18 @@ namespace Server
 
         public async Task CargarDatosDePrueba()
         {
-            Domain.Game fifa = new Domain.Game("Fifa 21 Prueba", GameGender.Deporte, "Futbol actual", "fifa.jpg");
-            fifa.AddRating(new Domain.UserRating("Muy buen juego", GameCalification.Bueno, new Domain.User("PacoPrueba")));
-            fifa.AddRating(new Domain.UserRating("No es compatible con mi pc", GameCalification.Muy_Malo, new Domain.User("JuanPrueba")));
-            Domain.Game cod = new Domain.Game("Call of duty Prueba", GameGender.Accion, "Shooter", "COD.jpg");
-            Domain.Game mario = new Domain.Game("Mario Bros", GameGender.Aventura, "juego de nintendo", "mario.jpg");
-            await grpcClient.SendGameAsync(ProtoDomainParsing.ParseDomainGame(fifa));
-            await grpcClient.SendGameAsync(ProtoDomainParsing.ParseDomainGame(cod));
-            await grpcClient.SendGameAsync(ProtoDomainParsing.ParseDomainGame(mario));
+            //Domain.Game fifa = new Domain.Game("Fifa 21 Prueba", GameGender.Deporte, "Futbol actual", "fifa.jpg");
+            //fifa.AddRating(new Domain.UserRating("Muy buen juego", GameCalification.Bueno, new Domain.User("PacoPrueba")));
+            //fifa.AddRating(new Domain.UserRating("No es compatible con mi pc", GameCalification.Muy_Malo, new Domain.User("JuanPrueba")));
+            //Domain.Game cod = new Domain.Game("Call of duty Prueba", GameGender.Accion, "Shooter", "COD.jpg");
+            //Domain.Game mario = new Domain.Game("Mario Bros", GameGender.Aventura, "juego de nintendo", "mario.jpg");
+            //await grpcClient.SendGameAsync(ProtoDomainParsing.ParseDomainGame(fifa));
+            //await grpcClient.SendGameAsync(ProtoDomainParsing.ParseDomainGame(cod));
+            //await grpcClient.SendGameAsync(ProtoDomainParsing.ParseDomainGame(mario));
+            var reply = await grpcClient.LoadTestDataAsync(new InfoRequest
+            {
+                Info = "Cargar datos de prueba"
+            });
         }
         public async Task ModifyUser(string name)
         {

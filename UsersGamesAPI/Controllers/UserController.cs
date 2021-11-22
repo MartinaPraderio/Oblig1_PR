@@ -10,7 +10,7 @@ using UsersGamesAPI.Models;
 namespace UsersGamesAPI.Controllers
 {
     [ApiController]
-    [Route("[users]")]
+    [Route("users")]
     public class UserController : ControllerBase
     {
         private readonly UserLogic _userLogic;
