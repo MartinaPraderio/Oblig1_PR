@@ -11,7 +11,7 @@ using UsersGamesAPI.Models;
 namespace UsersGamesAPI.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
+    [Route("[games]")]
     public class GameController : ControllerBase
     {
         private readonly GameLogic _gameLogic;

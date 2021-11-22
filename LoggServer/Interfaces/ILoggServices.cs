@@ -9,3 +9,4 @@ namespace LoggServer.Interfaces
         IEnumerable<Logg> GetAll(string user, string game, string date);
     }
 }
+
