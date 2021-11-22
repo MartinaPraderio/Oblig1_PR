@@ -317,7 +317,7 @@ namespace Server
                 {
                     Info =  name +Environment.NewLine + newName
                 });
-                Console.WriteLine(replyModify);
+                Console.WriteLine(replyModify.Info);
             }
             else
             {
