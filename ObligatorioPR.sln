@@ -13,8 +13,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Domain", "Domain\Domain.csp
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GrpcServer", "GrpcServer\GrpcServer.csproj", "{2BB73EB7-7B6A-45FD-929B-A5130B13EBFF}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LoggAPI", "..\LogsAPI\LoggAPI.csproj", "{EB502144-5553-47E4-88B2-7ED4BACAE99F}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UsersGamesAPI", "UsersGamesAPI\UsersGamesAPI.csproj", "{47C8BFC0-1FF9-45E1-8CB0-9A679D34E831}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BusinessLogic", "BusinessLogic\BusinessLogic.csproj", "{C0BDA957-AD9B-43B6-93D2-29D4923A91D8}"
