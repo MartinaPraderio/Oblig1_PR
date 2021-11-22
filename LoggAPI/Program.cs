@@ -14,7 +14,7 @@ using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 
-namespace LogsServer
+namespace LoggAPI
 {
     public class Program
     {
@@ -22,12 +22,12 @@ namespace LogsServer
         private static IModel channel;
         public static void Main(string[] args)
         {
-            var factory = new ConnectionFactory { HostName = "localhost" };
-            using IConnection connection = factory.CreateConnection();
-            channel = connection.CreateModel();
-
+            //var factory = new ConnectionFactory { HostName = "localhost" };
+            //using IConnection connection = factory.CreateConnection();
+            //channel = connection.CreateModel();
+            channel = Repository.Lists.channel;
             DeclareQueue(channel);
-            ReceiveMessages();
+            Messages.ReceiveMessages();
 
             CreateHostBuilder(args).Build().Run();
         }
@@ -47,34 +47,7 @@ namespace LogsServer
                 autoDelete: false,
                 arguments: null);
         }
-        public static Logg ByteArrayToLogg(byte[] arrBytes)
-        {
-            using (var memStream = new MemoryStream())
-            {
-                var binForm = new BinaryFormatter();
-                memStream.Write(arrBytes, 0, arrBytes.Length);
-                memStream.Seek(0, SeekOrigin.Begin);
-                var obj = binForm.Deserialize(memStream);
-                return (Logg)obj;
-            }
-        }
-        public static void ReceiveMessages()
-        {
-            var consumer = new EventingBasicConsumer(channel);
-            consumer.Received += (model, ea) =>
-            {
-                byte[] body = ea.Body.ToArray();
-                string message = Encoding.UTF8.GetString(body);
-                Logg logg = ByteArrayToLogg(body);
-                Console.WriteLine("logg agregado " + logg);
-                LoggServices.Instance().AddLogg(logg);
-                Console.WriteLine("cantidad de loggs " + LoggServices.Instance().loggs.Count());
-
-            };
-            channel.BasicConsume(
-                queue: loggsQueue,
-                autoAck: true,
-                consumer: consumer);
-        }
+        
+        
     }
 }

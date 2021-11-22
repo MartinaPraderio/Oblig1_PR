@@ -24,7 +24,7 @@ namespace LoggServer
         }
         public IEnumerable<Logg> GetAll(string user, string game, string date)
         {
-            //LoggProgram.ReceiveMessages();
+            //Prog.ReceiveMessages();
             if (user != null)
                 loggs = loggs.FindAll(x => x.User.Equals(user));
             if (game != null)

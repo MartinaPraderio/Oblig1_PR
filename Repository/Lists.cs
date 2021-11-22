@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Domain;
+using RabbitMQ.Client;
+using System;
 using System.Collections.Generic;
 
 namespace Repository
@@ -10,6 +12,7 @@ namespace Repository
         //private RepeatedField<User> users = new RepeatedField<User>();
         public static List<Domain.User> users = new List<Domain.User>();
         public static List<Domain.User> loggedUsers = new List<Domain.User>();
-
+        public static IModel channel = new ConnectionFactory { HostName = "localhost" }.CreateConnection().CreateModel();
+        public static List<Logg> loggs = new List<Logg>();
     }
 }

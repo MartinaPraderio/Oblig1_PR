@@ -14,23 +14,31 @@ namespace LoggAPI.Services
         {
             return _instance;
         }
-        public List<Logg> loggs = new List<Logg>();
+        //public List<Logg> loggs = new List<Logg>();
 
         public void AddLogg(Logg logg)
         {
-            loggs.Add(logg);
+            Repository.Lists.loggs.Add(logg);
         }
-        public IEnumerable<Logg> GetAll(string user, string game, string date)
+        public IEnumerable<Logg> GetAll(string user, string game, DateTime date)
         {
-            
+            List<Logg> result = new List<Logg>();
+            Messages.ReceiveMessages();
             if (user != null)
-                loggs = loggs.FindAll(x => x.User.Equals(user));
+                ConcatLists(result, Repository.Lists.loggs.FindAll(x => (x.User != null) && x.User.Equals(user)));
             if (game != null)
-                loggs = loggs.FindAll(x => x.Game.Equals(user));
+                ConcatLists(result, Repository.Lists.loggs.FindAll(x => (x.Game != null) && x.Game.Equals(game)));
             if (date != null)
-                //DateTime.Now.ToString("MM/dd/yyyy HH:mm") El .Date es para agarrar solo la fecha no la hora
-                loggs = loggs.FindAll(x => x.Date.Date.ToString().Equals(user));
-            return loggs;
+                ConcatLists(result, Repository.Lists.loggs.FindAll(x => (x.Date != null)&& x.Date.Date.Equals(date)));
+            return result;
+        }
+
+        private void ConcatLists(List<Logg> a, List<Logg> b)
+        {
+            foreach (Logg logg in b)
+            {
+                a.Add(logg);
+            }
         }
     }
 }

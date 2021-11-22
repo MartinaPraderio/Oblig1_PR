@@ -1,4 +1,4 @@
-﻿using LoggServer;
+﻿using  Domain;
 using System;
 
 namespace LoggAPI.Models
