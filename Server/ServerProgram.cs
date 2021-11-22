@@ -109,7 +109,7 @@ namespace Server
                             }
                         case "QualifyGame":
                             {
-                                string response = serverServicesManager.QualifyGame(message);
+                                string response = await serverServicesManager.QualifyGame(message);
                                 await ProtocolDataProgram.SendAsync(tcpClient.GetStream(), response);
                                 break;
                             }

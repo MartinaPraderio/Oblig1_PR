@@ -18,11 +18,13 @@ service Provider {
     rpc GetGamesByCalification (InfoRequest) returns (Games);
     rpc BuyGame (InfoRequest) returns (InfoRequest);
     rpc QualifyGame (InfoRequest) returns (InfoRequest);
+    rpc UpdateGame (Game) returns (InfoRequest);
 
     rpc SendUser(User) returns (User);
     rpc GetUser(InfoRequest) returns (User);
     rpc ModifyUser(InfoRequest) returns (InfoRequest);
     rpc DeleteUser(InfoRequest) returns (InfoRequest);
+    rpc ExistsUser(InfoRequest) returns (InfoRequest);
 
     rpc GetCatalogue(InfoRequest) returns (Catalogue);
     rpc GetUsers(InfoRequest) returns (Users);

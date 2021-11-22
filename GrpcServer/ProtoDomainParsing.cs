@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Server
+namespace GrpcServer
 {
     public class ProtoDomainParsing
     {
@@ -21,16 +21,22 @@ namespace Server
 
         public static Game ParseDomainGame(Domain.Game dGame)
         {
-            Game.Types.GameGender gdr = ParseDomainGameGender(dGame.Gender);
-            RepeatedField<UserRating> pUserRatings = ParseDomainUserRatingList(dGame.UserRatings);
-            return new Game
+            if (dGame != null) {
+                Game.Types.GameGender gdr = ParseDomainGameGender(dGame.Gender);
+                RepeatedField<UserRating> pUserRatings = ParseDomainUserRatingList(dGame.UserRatings);
+                return new Game
+                {
+                    Title = dGame.Title,
+                    Gender = gdr,
+                    Synopsis = dGame.Synopsis,
+                    Cover = dGame.Cover,
+                    UserRatings = { pUserRatings }
+                };
+            }
+            else
             {
-                Title = dGame.Title,
-                Gender = gdr,
-                Synopsis = dGame.Synopsis,
-                Cover = dGame.Cover,
-                UserRatings = { pUserRatings }
-            };
+                return null;
+            }
         }
 
         public static RepeatedField<UserRating> ParseDomainUserRatingList(List<Domain.UserRating> userRatings)
@@ -38,10 +44,9 @@ namespace Server
             RepeatedField<UserRating> pUserRatingList = new RepeatedField<UserRating>();
             foreach (Domain.UserRating rating in userRatings)
             {
-                UserRating.Types.GameCalification calif = ParseDomainGameCalification(rating.Calification);
                 pUserRatingList.Add(new UserRating
                 {
-                    Calification = calif,
+                    Calification = ParseDomainGameCalification(rating.Calification),
                     Review = rating.Review,
                     User = new User
                     {
@@ -66,7 +71,7 @@ namespace Server
         public static UserRating.Types.GameCalification ParseDomainGameCalification(GameCalification calification)
         {
             UserRating.Types.GameCalification result = UserRating.Types.GameCalification.SinCalificaciones;
-            switch(calification)
+            switch (calification)
             {
                 case GameCalification.Muy_Malo:
                     result = UserRating.Types.GameCalification.MuyMalo;
@@ -89,6 +94,7 @@ namespace Server
             }
             return result;
         }
+
 
         public static Game.Types.GameGender ParseDomainGameGender(GameGender gender)
         {
