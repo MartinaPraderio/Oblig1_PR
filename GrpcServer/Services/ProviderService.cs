@@ -1,7 +1,9 @@
 using Google.Protobuf.Collections;
 using Grpc.Core;
+using LoggServer;
 using Microsoft.Extensions.Logging;
 using ProtocolData;
+using RabbitMQ.Client;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -89,6 +91,13 @@ namespace GrpcServer.Services
                     response = "Este usuario no existe en el sistema";
                 }
             }
+            Logg logg = new Logg
+            {
+                User = username.Info,
+                Action = response,
+                Date = DateTime.Now
+            };
+            Program.PublishMessage(ChannelComunication._channel, logg);
             return Task.FromResult(new InfoRequest
             {
                 Info = response
