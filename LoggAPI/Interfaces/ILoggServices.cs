@@ -9,6 +9,6 @@ namespace LoggAPI.Interfaces
     public interface ILoggServices
     {
         public void AddLogg(Logg logg);
-        IEnumerable<Logg> GetAll(string user, string game, string date);
+        IEnumerable<Logg> GetAll(string user, string game, DateTime date);
     }
 }

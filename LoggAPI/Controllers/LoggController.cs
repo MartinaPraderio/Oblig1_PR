@@ -5,10 +5,10 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using LoggServer.Interfaces;
+using LoggAPI.Interfaces;
 using LoggAPI.Models;
 
-namespace LogsServer.Controllers
+namespace LoggAPI.Controllers
 {
     [ApiController]
     [Route("logs")]
@@ -23,7 +23,7 @@ namespace LogsServer.Controllers
         }
 
         [HttpGet()]
-        public IActionResult GetAll([FromQuery] string user, [FromQuery] string game, [FromQuery] string date)
+        public IActionResult GetAll([FromQuery] string user, [FromQuery] string game, [FromQuery] DateTime date)
         {
             var logs = this._loggServices.GetAll(user, game, date);
             return Ok(LoggModel.ToDto(logs));
