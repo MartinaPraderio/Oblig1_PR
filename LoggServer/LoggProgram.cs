@@ -15,15 +15,15 @@ namespace LoggServer
         private static IModel channel;
         public static void Main(string[] args)
         {
-            var factory = new ConnectionFactory { HostName = "localhost" };
-            using IConnection connection = factory.CreateConnection();
-            channel = connection.CreateModel();
+            //var factory = new ConnectionFactory { HostName = "localhost" };
+            //using IConnection connection = factory.CreateConnection();
+            //channel = connection.CreateModel();
 
-            DeclareQueue(channel);
-            ReceiveMessages();
+            //DeclareQueue(channel);
+            //ReceiveMessages();
 
-            Console.WriteLine("Press enter to exit.");
-            Console.ReadLine();
+            //Console.WriteLine("Press enter to exit.");
+            //Console.ReadLine();
         }
         private static void DeclareQueue(IModel channel)
         {
