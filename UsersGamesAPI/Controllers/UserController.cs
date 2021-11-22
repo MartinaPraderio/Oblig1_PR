@@ -1,4 +1,5 @@
 ﻿using BusinessLogic;
+using BusinessLogic.Interfaces;
 using Domain;
 using Microsoft.AspNetCore.Mvc;
 using System;
@@ -13,9 +14,9 @@ namespace UsersGamesAPI.Controllers
     [Route("users")]
     public class UserController : ControllerBase
     {
-        private readonly UserLogic _userLogic;
+        private readonly IUserLogic _userLogic;
 
-        public UserController(UserLogic userLogic)
+        public UserController(IUserLogic userLogic)
         {
             _userLogic = userLogic;
         }
@@ -41,15 +42,15 @@ namespace UsersGamesAPI.Controllers
             return Content("Usuario eliminado exitosamente");
         }
 
-        [HttpPost("{name}")]
-        public IActionResult AssociateGame([FromRoute] string name, [FromBody] string gameTitle)
+        [HttpPost("{name}/{gameTitle}")]
+        public IActionResult AssociateGame([FromRoute] string name, [FromRoute] string gameTitle)
         {
             this._userLogic.AssociateGame(name, gameTitle);
             return Content("Juego asociado exitosamente");
         }
 
-        [HttpDelete("{name}")]
-        public IActionResult DesassociateGame([FromRoute] string name, [FromBody] string gameTitle)
+        [HttpDelete("{name}/{gameTitle}")]
+        public IActionResult DesassociateGame([FromRoute] string name, [FromRoute] string gameTitle)
         {
             this._userLogic.DesassociateGame(name, gameTitle);
             return Content("Juego desasociado exitosamente");

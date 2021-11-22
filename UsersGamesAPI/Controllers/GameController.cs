@@ -1,4 +1,5 @@
 ﻿using BusinessLogic;
+using BusinessLogic.Interfaces;
 using Domain;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -14,9 +15,9 @@ namespace UsersGamesAPI.Controllers
     [Route("games")]
     public class GameController : ControllerBase
     {
-        private readonly GameLogic _gameLogic;
+        private readonly IGameLogic _gameLogic;
 
-        public GameController(GameLogic gameLogic)
+        public GameController(IGameLogic gameLogic)
         {
             _gameLogic = gameLogic;
         }
