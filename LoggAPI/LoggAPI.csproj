@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Oblig1_PR\Domain\Domain.csproj" />
+    <ProjectReference Include="..\Oblig1_PR\LoggServer\LoggServer.csproj" />
+  </ItemGroup>
+
+</Project>
