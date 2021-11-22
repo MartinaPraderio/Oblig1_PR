@@ -15,91 +15,53 @@ namespace GrpcServer.Services
     {
         private ILogger<ProviderService> _logger;
 
-        private Catalogue gameCatalogue = new Catalogue();
-        private Users users = new Users();
-        private Users loggedUsers = new Users();
-
         public ProviderService(ILogger<ProviderService> logger)
         {
             _logger = logger;
         }
         public override Task<InfoRequest> LoadTestData(InfoRequest request, Grpc.Core.ServerCallContext context)
         {
-            UserRating userRating1 = new UserRating
-            {
-                Review = "Muy buen juego",
-                Calification = UserRating.Types.GameCalification.Bueno,
-                User = new User
-                {
-                    UserName = "JuanPrueba"
-                }
-            };
-            UserRating userRating2 = new UserRating
-            {
-                Review = "No es compatible con mi pc",
-                Calification = UserRating.Types.GameCalification.MuyMalo,
-                User = new User
-                {
-                    UserName = "PacoPrueba"
-                }
-            };
-            RepeatedField<GrpcServer.UserRating> gameUserRatings = new RepeatedField<UserRating>();
+            Domain.User juan = new Domain.User("JuanPrueba");
+            Domain.User paco = new Domain.User("PacoPrueba");
+            Domain.UserRating userRating1 = new Domain.UserRating("Muy buen juego", Domain.GameCalification.Bueno, juan);
+            Domain.UserRating userRating2 = new Domain.UserRating("No es compatible con mi pc", Domain.GameCalification.Muy_Malo, paco);
+            List<Domain.UserRating> gameUserRatings = new List<Domain.UserRating>();
             gameUserRatings.Add(userRating1);
             gameUserRatings.Add(userRating2);
 
-            Game fifa = new Game
+            Domain.Game fifa = new Domain.Game("Fifa 21 Prueba", Domain.GameGender.Deporte, "Futbol actual", "fifa.jpg", gameUserRatings);
+            Domain.Game callOfDuty = new Domain.Game("Call of duty Prueba", Domain.GameGender.Accion, "Shooter", "COD.jpg", gameUserRatings);
+            Domain.Game MarioBros = new Domain.Game("Mario Bros", Domain.GameGender.Aventura, "juego de nintendo", "mario.jpg", gameUserRatings);
+            lock (Repository.Lists.gameCatalogue)
             {
-                Title = "Fifa 21 Prueba",
-                Gender = Game.Types.GameGender.Deporte,
-                UserRatings = { gameUserRatings },
-                Synopsis = "Futbol actual",
-                Cover = "fifa.jpg"
-            };
-            Game callOfDuty = new Game
-            {
-                Title = "Call of duty Prueba",
-                Gender = Game.Types.GameGender.Accion,
-                Synopsis = "Shooter",
-                Cover = "COD.jpg"
-            };
-            Game MarioBros = new Game
-            {
-                Title = "Mario Bros",
-                Gender = Game.Types.GameGender.Aventura,
-                UserRatings = { gameUserRatings },
-                Synopsis = "juego de nintendo",
-                Cover = "mario.jpg"
-            };
-            lock (this.gameCatalogue.Games)
-            {
-                gameCatalogue.Games.Add(fifa);
-                gameCatalogue.Games.Add(callOfDuty);
-                gameCatalogue.Games.Add(MarioBros);
+                Repository.Lists.gameCatalogue.Add(fifa);
+                Repository.Lists.gameCatalogue.Add(callOfDuty);
+                Repository.Lists.gameCatalogue.Add(MarioBros);
             }
             return Task.FromResult(new InfoRequest
             {
                 Info = "Datos de prueba cargados correctamente"
             });
         }
-        public override Task<InfoRequest> Login( InfoRequest username, Grpc.Core.ServerCallContext context)
+        public override Task<InfoRequest> Login( InfoRequest request, Grpc.Core.ServerCallContext context)
         {
-            string response = "";
-            lock (this.users.Users_)
+            lock (Repository.Lists.users)
             {
-                User user = this.users.Users_.Where(x => x.UserName.Equals(username)).FirstOrDefault();
+                Domain.User user = Repository.Lists.users.Find(x => x.UserName.Equals(request.Info));
 
+                string response = "";
                 if (user != null)
                 {
-                    lock (this.loggedUsers)
+                    lock (Repository.Lists.loggedUsers)
                     {
-                        if (this.loggedUsers.Users_.Where(x => x.UserName.Equals(username)).FirstOrDefault() != null)
+                        if (Repository.Lists.loggedUsers.Find(x => x.UserName.Equals(request.Info)) != null)
                         {
                             response = "Ya existe una sesion con este usuario ";
                         }
                         else
                         {
                             response = "Login exitoso";
-                            this.loggedUsers.Users_.Add(user);
+                            Repository.Lists.loggedUsers.Add(user);
                         }
                     }
                 }
@@ -107,28 +69,21 @@ namespace GrpcServer.Services
                 {
                     response = "El usuario que ingresó no existe";
                 }
+                return Task.FromResult(new InfoRequest
+                {
+                    Info = response
+                });
             }
-            Logg logg = new Logg
-            {
-                User = username.Info,
-                Action = response,
-                Date = DateTime.Now
-            };
-            Program.PublishMessage(ChannelComunication._channel, logg);
-            return Task.FromResult(new InfoRequest
-            {
-                Info = response
-            });
         }
-        public override Task<InfoRequest> Logout (InfoRequest username, Grpc.Core.ServerCallContext context)
+        public override Task<InfoRequest> Logout (InfoRequest request, Grpc.Core.ServerCallContext context)
         {
             string response = "";
-            lock (this.loggedUsers.Users_)
+            lock (Repository.Lists.loggedUsers)
             {
-                User user = this.loggedUsers.Users_.Where(x => x.UserName.Equals(username)).FirstOrDefault();
+                Domain.User user = Repository.Lists.loggedUsers.Find(x => x.UserName.Equals(request.Info));
                 if (user != null)
                 {
-                    loggedUsers.Users_.Remove(user);
+                    Repository.Lists.loggedUsers.Remove(user);
                     response = "Sesion terminada exitosamente";
                 }
                 else
@@ -150,11 +105,11 @@ namespace GrpcServer.Services
         }
         public override Task<User> SendUser(User user, Grpc.Core.ServerCallContext context)
         {
-            lock (this.users)
+            lock (Repository.Lists.users)
             {
-                this.users.Users_.Add(user);
+                Repository.Lists.users.Add(ProtoDomainParsing.ParseProtoUser(user));
             }
-            Console.WriteLine("user agregado " + users.Users_.First().ToString());
+            Console.WriteLine("user agregado " + Repository.Lists.users.First().ToString());
             RepeatedField<GrpcServer.Game> userGames = user.Games;
             return Task.FromResult(new User
             {
@@ -162,14 +117,15 @@ namespace GrpcServer.Services
                 Games = { userGames }
             });
         }       
-        public override Task<User> GetUser(InfoRequest userName, Grpc.Core.ServerCallContext context)
+        public override Task<User> GetUser(InfoRequest request, Grpc.Core.ServerCallContext context)
         {
-            User aUser;
-            lock (this.users)
+            Domain.User aUser;
+            lock (Repository.Lists.users)
             {
-                aUser = this.users.Users_.Where(x => x.UserName.Equals(userName)).FirstOrDefault();
+                aUser = Repository.Lists.users.Find(x => x.UserName.Equals(request.Info));
             }
-            RepeatedField<GrpcServer.Game> userGames = aUser.Games;
+            
+            RepeatedField<GrpcServer.Game> userGames = ProtoDomainParsing.ParseDomainGameList(aUser.Games);
             return Task.FromResult(new User
             {
                 UserName = aUser.UserName,
@@ -177,13 +133,14 @@ namespace GrpcServer.Services
             });
         }
 
-        public override Task<InfoRequest> ModifyUser(InfoRequest userName, Grpc.Core.ServerCallContext context)
+        public override Task<InfoRequest> ModifyUser(InfoRequest request, Grpc.Core.ServerCallContext context)
         {
-            User aUser;
-            lock (this.users)
+            Domain.User aUser;
+            string[] names = request.Info.Split(Environment.NewLine);
+            lock (Repository.Lists.users)
             {
-                aUser = this.users.Users_.Where(x => x.UserName.Equals(userName)).FirstOrDefault();
-                aUser.UserName = userName.Info;
+                aUser = Repository.Lists.users.Find(x => x.UserName.Equals(names[0]));
+                aUser.UserName = names[1];
             }
             return Task.FromResult(new InfoRequest
             {
@@ -191,18 +148,18 @@ namespace GrpcServer.Services
             });
         }
 
-        public override Task<InfoRequest> DeleteUser(InfoRequest userName, Grpc.Core.ServerCallContext context)
+        public override Task<InfoRequest> DeleteUser(InfoRequest request, Grpc.Core.ServerCallContext context)
         {
             string response = "";
-            User aUser;
-            lock (this.users)
+            Domain.User aUser;
+            lock (Repository.Lists.users)
             {
-                aUser = this.users.Users_.Where(x => x.UserName.Equals(userName)).FirstOrDefault();
+                aUser = Repository.Lists.users.Find(x => x.UserName.Equals(request.Info));
             }
-            User userLogged;
-            lock (this.loggedUsers)
+            Domain.User userLogged;
+            lock (Repository.Lists.loggedUsers)
             {
-                 userLogged = this.loggedUsers.Users_.Where(x => x.UserName.Equals(userName)).FirstOrDefault();
+                 userLogged = Repository.Lists.loggedUsers.Find(x => x.UserName.Equals(request.Info));
             }
             if (aUser != null)
             {
@@ -212,7 +169,7 @@ namespace GrpcServer.Services
                 }
                 else
                 {
-                    this.users.Users_.Remove(aUser);
+                    Repository.Lists.users.Remove(aUser);
                     response = "El usuario fue eliminado con exito.";
                 }
             }
@@ -227,9 +184,9 @@ namespace GrpcServer.Services
         }
         public override Task<Game> SendGame(Game game, Grpc.Core.ServerCallContext context)
         {
-            lock (this.gameCatalogue.Games)
+            lock (Repository.Lists.gameCatalogue)
             {
-                this.gameCatalogue.Games.Add(game);
+                Repository.Lists.gameCatalogue.Add(ProtoDomainParsing.ParseProtoGame(game));
             }
             RepeatedField<GrpcServer.UserRating> gameUserRatings = game.UserRatings;
             return Task.FromResult(new Game
@@ -242,41 +199,43 @@ namespace GrpcServer.Services
             });
         }
 
-        public override Task<Game> GetGame(InfoRequest gameTitle, Grpc.Core.ServerCallContext context)
+        public override Task<Game> GetGame(InfoRequest request, Grpc.Core.ServerCallContext context)
         {
-            Game aGame;
-            lock (this.gameCatalogue.Games)
+            Domain.Game aGame;
+            lock (Repository.Lists.gameCatalogue)
             {
-                aGame = this.gameCatalogue.Games.Where(x => x.Title.Equals(gameTitle)).FirstOrDefault();
+                aGame = Repository.Lists.gameCatalogue.Find(x => x.Title.Equals(request.Info));
             }
-            RepeatedField<GrpcServer.UserRating> gameUserRatings = aGame.UserRatings;
-            return Task.FromResult(new Game
+            if (aGame == null)
             {
-                Title = aGame.Title,
-                Gender = aGame.Gender,
-                UserRatings = { gameUserRatings },
-                Synopsis = aGame.Synopsis,
-                Cover = aGame.Cover
-            });
+                return Task.FromResult(new Game
+                {
+
+                });
+            }
+            else
+            {
+                return Task.FromResult(ProtoDomainParsing.ParseDomainGame(aGame));
+            }
         }
 
-        public override Task<InfoRequest> ModifyGame(InfoRequest game, Grpc.Core.ServerCallContext context)
+        public override Task<InfoRequest> ModifyGame(InfoRequest request, Grpc.Core.ServerCallContext context)
         {
-            string[] info = game.Info.Split(Environment.NewLine);
+            string[] info = request.Info.Split(Environment.NewLine);
 
-            lock (this.gameCatalogue.Games)
+            lock (Repository.Lists.gameCatalogue)
             {
-                Game aGame = gameCatalogue.Games.Where(x => x.Title.Equals(info[0])).FirstOrDefault();
+                Domain.Game aGame = Repository.Lists.gameCatalogue.Find(x => x.Title.Equals(info[0]));
                 string response = "";
                 if (aGame != null)
                 {
-                    Game newGameValues; // = JSON.stringify(info[1]);
-                    //Game newGameValues = ProtocolDataProgram.DeserializeGame(info[1]);
+                    //Game newGameValues; // = JSON.stringify(info[1]);
+                    Domain.Game newGameValues = ProtocolDataProgram.DeserializeGame(info[1]);
 
-                    //aGame.Title = newGameValues.Title;
-                    //aGame.Gender = newGameValues.Gender;
-                    //aGame.Synopsis = newGameValues.Synopsis;
-                    //response = "El juego fue modificado.";
+                    aGame.Title = newGameValues.Title;
+                    aGame.Gender = newGameValues.Gender;
+                    aGame.Synopsis = newGameValues.Synopsis;
+                    response = "El juego fue modificado.";
                 }
                 else
                 {
@@ -291,15 +250,15 @@ namespace GrpcServer.Services
 
         public override Task<InfoRequest> DeleteGame(InfoRequest request, Grpc.Core.ServerCallContext context)
         {
-            lock (this.gameCatalogue.Games)
+            lock (Repository.Lists.gameCatalogue)
             {
-                Game aGame = gameCatalogue.Games.Where(x => x.Title.Equals(request.Info)).FirstOrDefault();
+                Domain.Game aGame = Repository.Lists.gameCatalogue.Find(x => x.Title.Equals(request.Info));
 
                 string response = "";
                 if (aGame != null)
                 {
 
-                    this.gameCatalogue.Games.Remove(aGame);
+                    Repository.Lists.gameCatalogue.Remove(aGame);
                     response = "El juego fue eliminado.";
                 }
                 else
@@ -314,16 +273,16 @@ namespace GrpcServer.Services
             string[] info = request.Info.Split(Environment.NewLine);
             string buyerName = info[0];
             string gameName = info[1];
-            lock (this.gameCatalogue.Games)
+            lock (Repository.Lists.gameCatalogue)
             {
                 string response = "";
 
-                Game requestedGame = gameCatalogue.Games.Where(x => x.Title.Equals(gameName)).FirstOrDefault();
+                Domain.Game requestedGame = Repository.Lists.gameCatalogue.Find(x => x.Title.Equals(gameName));
                 if (requestedGame != null)
                 {
-                    lock (this.users)
+                    lock (Repository.Lists.users)
                     {
-                        User buyer = this.users.Users_.Where(x => x.UserName.Equals(buyerName)).FirstOrDefault();
+                        Domain.User buyer = Repository.Lists.users.Find(x => x.UserName.Equals(buyerName));
                         buyer.Games.Add(requestedGame);
                     }
                     response = "Su compra ha finalizado con exito";
@@ -345,44 +304,39 @@ namespace GrpcServer.Services
             string userName = info[0];
             string gameTitle = info[1];
 
-            UserRating.Types.GameCalification calification;
+            Domain.GameCalification calification;
             if(info[2] == "Bueno")
             {
-                calification = UserRating.Types.GameCalification.Bueno;
+                calification = Domain.GameCalification.Bueno;
             }
             else if (info[2] == "Malo")
             {
-                calification = UserRating.Types.GameCalification.Malo;
+                calification = Domain.GameCalification.Malo;
             }
             else if (info[2] == "Medio")
             {
-                calification = UserRating.Types.GameCalification.Medio;
+                calification = Domain.GameCalification.Medio;
             }
             else if (info[2] == "MuyBueno")
             {
-                calification = UserRating.Types.GameCalification.MuyBueno;
+                calification = Domain.GameCalification.Muy_Bueno;
             }
             else if (info[2] == "MuyMalo")
             {
-                calification = UserRating.Types.GameCalification.MuyMalo;
+                calification = Domain.GameCalification.Muy_Malo;
             } else
             {
-                calification = UserRating.Types.GameCalification.SinCalificaciones;
+                calification = Domain.GameCalification.Sin_Calificaciones;
             }
             string review = info[3];
-            lock (this.gameCatalogue.Games)
+            lock (Repository.Lists.gameCatalogue)
             {
-                Game gameToQualify = gameCatalogue.Games.Where(x => x.Title.Equals(gameTitle)).FirstOrDefault();
+                Domain.Game gameToQualify = Repository.Lists.gameCatalogue.Find(x => x.Title.Equals(gameTitle));
                 string addRatingResponse = "";
                 if (gameToQualify != null)
                 {
-                    User reviewer = this.users.Users_.Where(x => x.UserName.Equals(userName)).FirstOrDefault();
-                    UserRating newRating = new UserRating
-                    {
-                        Review = review,
-                        Calification = calification,
-                        User = reviewer
-                    };
+                    Domain.User reviewer = Repository.Lists.users.Find(x => x.UserName.Equals(userName));
+                    Domain.UserRating newRating = new Domain.UserRating(review, calification,reviewer);
                     gameToQualify.UserRatings.Add(newRating);
                     addRatingResponse = "Su review fue publicada con exito.";
                 }
@@ -399,44 +353,76 @@ namespace GrpcServer.Services
         }
         public override Task<Games> GetGamesContaining(InfoRequest request, Grpc.Core.ServerCallContext context)
         {
-            RepeatedField<GrpcServer.Game> games = (RepeatedField<GrpcServer.Game>)gameCatalogue.Games.Where(x => x.Title.Equals(request.Info));
-            return Task.FromResult(new Games
+            List<Domain.Game> games = Repository.Lists.gameCatalogue.FindAll(x => x.Title.Equals(request.Info));
+            Games pGames = new Games
             {
-                Games_ = { games }
-            });
+                Games_ = { ProtoDomainParsing.ParseDomainGameList(games) }
+            };
+            return Task.FromResult(pGames);
         }
         public override Task<Games> GetGamesByGender(InfoRequest request, Grpc.Core.ServerCallContext context)
         {
-            RepeatedField<GrpcServer.Game> games = (RepeatedField<GrpcServer.Game>)gameCatalogue.Games.Where(x => x.Gender.ToString().Equals(request.Info));
+            List<Domain.Game> games = Repository.Lists.gameCatalogue.FindAll(x => x.Gender.ToString().Equals(request.Info));
             return Task.FromResult(new Games
             {
-                Games_ = { games }
+                Games_ = { ProtoDomainParsing.ParseDomainGameList(games)}
             });
         }
         public override Task<Games> GetGamesByCalification(InfoRequest request, Grpc.Core.ServerCallContext context)
         {
-            RepeatedField<GrpcServer.Game> games = (RepeatedField<GrpcServer.Game>)gameCatalogue.Games.Where((x => Math.Truncate(x.RatingAverage).ToString().Equals(request.Info)));
+            List<Domain.Game> games = Repository.Lists.gameCatalogue.FindAll((x => Math.Truncate(x.RatingAverage).ToString().Equals(request.Info)));
             return Task.FromResult(new Games
             {
-                Games_ = { games }
+                Games_ = { ProtoDomainParsing.ParseDomainGameList(games)}
             });
         }
         public override Task<Catalogue> GetCatalogue(InfoRequest request, Grpc.Core.ServerCallContext context)
         {
-            RepeatedField<GrpcServer.Game> catalogueGames = this.gameCatalogue.Games;
-            return Task.FromResult(new Catalogue
-            {
-                Games = { catalogueGames }
-            });
+            return Task.FromResult(ProtoDomainParsing.ParseDomainCatalogue(Repository.Lists.gameCatalogue));
         }
         public override Task<Users> GetUsers(InfoRequest request, Grpc.Core.ServerCallContext context)
         {
-            RepeatedField<GrpcServer.User> users = this.users.Users_;
+            RepeatedField<GrpcServer.User> users = ProtoDomainParsing.ParseDomainUserList(Repository.Lists.users);
             return Task.FromResult(new Users
             {
                 Users_ = { users }
             });
         }
-        
+
+        public override Task<InfoRequest> ExistsUser(InfoRequest request, Grpc.Core.ServerCallContext context)
+        {
+            Domain.User aUser = new Domain.User();
+            lock (Repository.Lists.users)
+            {
+                aUser = Repository.Lists.users.Find(x => x.UserName.Equals(request.Info));
+            }
+            string response = "";
+            if(aUser == null)
+            {
+                response = "false";
+            }
+            else
+            {
+                response = "true";
+            }
+            return Task.FromResult(new InfoRequest
+            {
+                Info = response
+            }) ;
+        }
+        public override Task<InfoRequest> UpdateGame(Game game, Grpc.Core.ServerCallContext context)
+        {
+            lock (Repository.Lists.gameCatalogue)
+            {
+                Domain.Game gameToUpdate = Repository.Lists.gameCatalogue.Find(x => x.Title.Equals(game.Title));
+                Repository.Lists.gameCatalogue.Remove(gameToUpdate);
+                Repository.Lists.gameCatalogue.Add(ProtoDomainParsing.ParseProtoGame(game));
+            }
+            return Task.FromResult(new InfoRequest
+            {
+                Info = "Actualizado"
+            });
+        }
+
     }
 }

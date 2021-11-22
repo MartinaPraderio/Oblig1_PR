@@ -65,9 +65,10 @@ namespace Server
                     {
                         case "PublishGame":
                             {
-                                //Domain.Game aGame = ProtocolDataProgram.DeserializeGame(message);
-                                //string response = await serverServicesManager.PublishGameAsync(aGame, tcpClient);
-                                //await ProtocolDataProgram.SendAsync(tcpClient.GetStream(), response);
+                                Domain.Game aGame = ProtocolDataProgram.DeserializeGame(message);
+                                Game pGame = ProtoDomainParsing.ParseDomainGame(aGame);
+                                string response = await serverServicesManager.PublishGameAsync(pGame, tcpClient);
+                                await ProtocolDataProgram.SendAsync(tcpClient.GetStream(), response);
                                 break;
                             }
                         case "NotifyUsername":
@@ -108,7 +109,7 @@ namespace Server
                             }
                         case "QualifyGame":
                             {
-                                string response = serverServicesManager.QualifyGame(message);
+                                string response = await serverServicesManager.QualifyGame(message);
                                 await ProtocolDataProgram.SendAsync(tcpClient.GetStream(), response);
                                 break;
                             }
@@ -143,7 +144,7 @@ namespace Server
                             }
                         case "ViewUserGames":
                             {
-                                string response = await serverServicesManager .ShowUserGames(message);
+                                string response = await serverServicesManager.ShowUserGames(message);
                                 await ProtocolDataProgram.SendAsync(tcpClient.GetStream(), response);
                                 break;
                             }
