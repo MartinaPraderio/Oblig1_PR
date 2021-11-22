@@ -1,6 +1,6 @@
 using Google.Protobuf.Collections;
 using Grpc.Core;
-using LoggServer;
+using Domain;
 using Microsoft.Extensions.Logging;
 using ProtocolData;
 using RabbitMQ.Client;

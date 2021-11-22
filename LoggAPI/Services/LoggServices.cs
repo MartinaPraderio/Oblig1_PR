@@ -1,13 +1,11 @@
-﻿using LoggServer.Interfaces;
-using RabbitMQ.Client;
-using RabbitMQ.Client.Events;
+﻿using Domain;
+using LoggAPI.Interfaces;
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Runtime.Serialization.Formatters.Binary;
-using System.Text;
+using System.Linq;
+using System.Threading.Tasks;
 
-namespace LoggServer
+namespace LoggAPI.Services
 {
     public class LoggServices : ILoggServices
     {
@@ -24,7 +22,7 @@ namespace LoggServer
         }
         public IEnumerable<Logg> GetAll(string user, string game, string date)
         {
-            //LoggProgram.ReceiveMessages();
+            
             if (user != null)
                 loggs = loggs.FindAll(x => x.User.Equals(user));
             if (game != null)

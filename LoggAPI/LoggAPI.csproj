@@ -5,8 +5,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Oblig1_PR\Domain\Domain.csproj" />
-    <ProjectReference Include="..\Oblig1_PR\LoggServer\LoggServer.csproj" />
+    <ProjectReference Include="..\Domain\Domain.csproj" />
+    <ProjectReference Include="..\LoggServer\LoggServer.csproj" />
   </ItemGroup>
 
 </Project>
