@@ -1,7 +1,9 @@
 using Google.Protobuf.Collections;
 using Grpc.Core;
+using LoggServer;
 using Microsoft.Extensions.Logging;
 using ProtocolData;
+using RabbitMQ.Client;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,6 +18,7 @@ namespace GrpcServer.Services
         private Catalogue gameCatalogue = new Catalogue();
         private Users users = new Users();
         private Users loggedUsers = new Users();
+
         public ProviderService(ILogger<ProviderService> logger)
         {
             _logger = logger;
@@ -80,11 +83,11 @@ namespace GrpcServer.Services
         }
         public override Task<InfoRequest> Login( InfoRequest username, Grpc.Core.ServerCallContext context)
         {
+            string response = "";
             lock (this.users.Users_)
             {
                 User user = this.users.Users_.Where(x => x.UserName.Equals(username)).FirstOrDefault();
 
-                string response = "";
                 if (user != null)
                 {
                     lock (this.loggedUsers)
@@ -104,11 +107,18 @@ namespace GrpcServer.Services
                 {
                     response = "El usuario que ingresó no existe";
                 }
-                return Task.FromResult(new InfoRequest
-                {
-                    Info = response
-                });
             }
+            Logg logg = new Logg
+            {
+                User = username.Info,
+                Action = response,
+                Date = DateTime.Now
+            };
+            Program.PublishMessage(ChannelComunication._channel, logg);
+            return Task.FromResult(new InfoRequest
+            {
+                Info = response
+            });
         }
         public override Task<InfoRequest> Logout (InfoRequest username, Grpc.Core.ServerCallContext context)
         {
@@ -126,6 +136,13 @@ namespace GrpcServer.Services
                     response = "Este usuario no existe en el sistema";
                 }
             }
+            Logg logg = new Logg
+            {
+                User = username.Info,
+                Action = response,
+                Date = DateTime.Now
+            };
+            Program.PublishMessage(ChannelComunication._channel, logg);
             return Task.FromResult(new InfoRequest
             {
                 Info = response

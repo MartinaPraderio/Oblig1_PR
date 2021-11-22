@@ -19,10 +19,12 @@
   <ItemGroup>
     <PackageReference Include="Grpc.AspNetCore" Version="2.27.0" />
     <PackageReference Include="Microsoft.AspNet.WebPages" Version="3.2.7" />
+    <PackageReference Include="RabbitMQ.Client" Version="6.2.2" />
     <PackageReference Include="WebGrease" Version="1.6.0" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\LoggServer\LoggServer.csproj" />
     <ProjectReference Include="..\ProtocolData\ProtocolData.csproj" />
     <ProjectReference Include="..\Server\Server.csproj" />
   </ItemGroup>

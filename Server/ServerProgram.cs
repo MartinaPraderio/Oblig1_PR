@@ -65,14 +65,14 @@ namespace Server
                     {
                         case "PublishGame":
                             {
-                                Domain.Game aGame = ProtocolDataProgram.DeserializeGame(message);
-                                string response = await serverServicesManager.PublishGameAsync(aGame, tcpClient);
-                                await ProtocolDataProgram.SendAsync(tcpClient.GetStream(), response);
+                                //Domain.Game aGame = ProtocolDataProgram.DeserializeGame(message);
+                                //string response = await serverServicesManager.PublishGameAsync(aGame, tcpClient);
+                                //await ProtocolDataProgram.SendAsync(tcpClient.GetStream(), response);
                                 break;
                             }
                         case "NotifyUsername":
                             {
-                                string response = serverServicesManager.Login(message);
+                                string response = await serverServicesManager.Login(message);
                                 await ProtocolDataProgram.SendAsync(tcpClient.GetStream(), response);
                                 break;
                             }
@@ -84,25 +84,25 @@ namespace Server
                             }
                         case "ModifyGame":
                             {
-                                string response = serverServicesManager.ModifyGame(message);
+                                string response = await serverServicesManager.ModifyGame(message);
                                 await ProtocolDataProgram.SendAsync(tcpClient.GetStream(), response);
                                 break;
                             }
                         case "SearchGameByTitle":
                             {
-                                string response = serverServicesManager.SearchGameByTitle(message);
+                                string response = await serverServicesManager.SearchGameByTitle(message);
                                 await ProtocolDataProgram.SendAsync(tcpClient.GetStream(), response);
                                 break;
                             }
                         case "SearchGameByGender":
                             {
-                                string response = serverServicesManager.SearchGameByGender(message);
+                                string response = await serverServicesManager.SearchGameByGender(message);
                                 await ProtocolDataProgram.SendAsync(tcpClient.GetStream(), response);
                                 break;
                             }
                         case "SearchGameByRating":
                             {
-                                string response = serverServicesManager.SearchGameByRating(message);
+                                string response = await serverServicesManager.SearchGameByRating(message);
                                 await ProtocolDataProgram.SendAsync(tcpClient.GetStream(), response);
                                 break;
                             }
@@ -114,7 +114,7 @@ namespace Server
                             }
                         case "GameDetails":
                             {
-                                string response = serverServicesManager.GameDetails(message);
+                                string response = await serverServicesManager.GameDetails(message);
                                 await ProtocolDataProgram.SendAsync(tcpClient.GetStream(), response);
                                 break;
                             }
@@ -137,19 +137,19 @@ namespace Server
                             }
                         case "BuyGame":
                             {
-                                string response = serverServicesManager.BuyGame(message);
+                                string response = await serverServicesManager.BuyGame(message);
                                 await ProtocolDataProgram.SendAsync(tcpClient.GetStream(), response);
                                 break;
                             }
                         case "ViewUserGames":
                             {
-                                string response = serverServicesManager.ShowUserGames(message);
+                                string response = await serverServicesManager .ShowUserGames(message);
                                 await ProtocolDataProgram.SendAsync(tcpClient.GetStream(), response);
                                 break;
                             }
                         case "LogOut":
                             {
-                                serverServicesManager.LogOut(message);
+                                await serverServicesManager.LogOut(message);
                                 break;
                             }
                     }
@@ -164,8 +164,6 @@ namespace Server
 
         public static async Task Main(string[] args)
         {
-
-            
 
             IConfiguration builder = new ConfigurationBuilder().AddJsonFile("Settings.json", true, true).Build();
             var ServerIpAdress = builder["Server:IP"];
