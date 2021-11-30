@@ -1,0 +1,55 @@
+﻿syntax = "proto3";
+
+option csharp_namespace = "GrpcClient";
+
+package domain;
+
+service TransferUser {
+	rpc SendUser(UserProto) returns (UserProto);
+}
+
+message GameProto {
+  string Title = 1;
+  enum GameGender
+    {
+        Otros = 0;
+        Aventura = 1;
+        Accion = 2;
+        Estrategia = 3;
+        Infantil = 4;
+        Deporte = 5;
+    }
+    GameGender Gender = 2;
+    repeated UserRatingProto UserRatings = 3;
+    string Synopsis = 4;
+    string Cover = 5;
+    float RatingAverage = 6;
+}
+
+
+
+message UserProto {
+  string UserName = 1;
+  repeated ListOfGames Games = 2;
+}
+
+message ListOfGames {
+  repeated GameProto games = 1;
+}
+
+
+message UserRatingProto {
+  string review = 1;
+  
+  enum GameCalification{
+        Sin_Calificaciones = 0;
+        Muy_Malo = 1;
+        Malo = 2;
+        Medio = 3;
+        Bueno = 4;
+        Muy_Bueno = 5;
+    }
+    GameCalification calification = 2;
+    UserProto user = 3;
+
+}

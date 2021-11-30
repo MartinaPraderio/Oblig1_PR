@@ -1,0 +1,27 @@
+﻿syntax = "proto3";
+
+option csharp_namespace = "GrpcClient";
+
+package game;
+
+import "userRating.proto";
+
+message Game {
+  string Title = 1;
+  enum GameGender
+    {
+        Otros = 1;
+        Aventura = 2;
+        Accion = 3;
+        Estrategia = 4;
+        Infantil = 5;
+        Deporte = 6;
+    }
+    GameGender Gender = 2;
+    repeated UserRatings UserRatings = 3;
+    string Synopsis = 4;
+    string Cover = 5;
+    float RatingAverage = 6;
+}
+
+
