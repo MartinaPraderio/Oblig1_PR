@@ -22,9 +22,7 @@ namespace LoggAPI
                 byte[] body = ea.Body.ToArray();
                 string message = Encoding.UTF8.GetString(body);
                 Logg logg = ByteArrayToLogg(body);
-                Console.WriteLine("logg agregado " + logg);
                 Repository.Lists.loggs.Add(logg);
-                Console.WriteLine("cantidad de loggs " + Repository.Lists.loggs.Count());
 
             };
             Repository.Lists.channel.BasicConsume(

@@ -12,10 +12,6 @@ namespace Server
     public class ServerServicesManager
     {
         private readonly static ServerServicesManager _instance = new ServerServicesManager();
-        //private Domain.Catalogue gameCatalogue = Domain.Catalogue.Instance;
-        //private List<Domain.User> users = new List<Domain.User>();
-        //private List<Domain.User> loggedUsers = new List<Domain.User>();
-        private TcpListener _tcpListener;
         FileCommunicationHandler fileCommunication;
         private Provider.ProviderClient grpcClient;
 
@@ -24,10 +20,6 @@ namespace Server
             return _instance;
         }
 
-        public void SetTcpListener(TcpListener tcpListener)
-        {
-            _tcpListener = tcpListener;
-        }
 
         public async Task<string> PublishGameAsync(Game newGame, TcpClient tcpClient) {
             this.fileCommunication = new FileCommunicationHandler(tcpClient);
@@ -289,14 +281,6 @@ namespace Server
 
         public async Task CargarDatosDePrueba()
         {
-            //Domain.Game fifa = new Domain.Game("Fifa 21 Prueba", GameGender.Deporte, "Futbol actual", "fifa.jpg");
-            //fifa.AddRating(new Domain.UserRating("Muy buen juego", GameCalification.Bueno, new Domain.User("PacoPrueba")));
-            //fifa.AddRating(new Domain.UserRating("No es compatible con mi pc", GameCalification.Muy_Malo, new Domain.User("JuanPrueba")));
-            //Domain.Game cod = new Domain.Game("Call of duty Prueba", GameGender.Accion, "Shooter", "COD.jpg");
-            //Domain.Game mario = new Domain.Game("Mario Bros", GameGender.Aventura, "juego de nintendo", "mario.jpg");
-            //await grpcClient.SendGameAsync(ProtoDomainParsing.ParseDomainGame(fifa));
-            //await grpcClient.SendGameAsync(ProtoDomainParsing.ParseDomainGame(cod));
-            //await grpcClient.SendGameAsync(ProtoDomainParsing.ParseDomainGame(mario));
             var reply = await grpcClient.LoadTestDataAsync(new InfoRequest
             {
                 Info = "Cargar datos de prueba"

@@ -25,9 +25,6 @@ namespace GrpcServer
             using IModel channel = connection.CreateModel();
             DeclareQueue(channel);
             ChannelComunication.SetChannel(channel);
-            //Console.WriteLine("Enter messages to send or type exit to finish");
-            /////SendMessages(channel);
-            //Console.ReadLine();
             CreateHostBuilder(args).Build().Run();
         }
 

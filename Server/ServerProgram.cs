@@ -175,7 +175,6 @@ namespace Server
 
             _tcpListener = new TcpListener(serverIPEndPoint);
             serverServicesManager = ServerServicesManager.Instance();
-            serverServicesManager.SetTcpListener(_tcpListener);
 
             //gRCP
             using var channel = GrpcChannel.ForAddress("https://localhost:5001");
@@ -188,7 +187,7 @@ namespace Server
             Console.WriteLine("");
             if (response.Equals("1"))
             {
-                serverServicesManager.CargarDatosDePrueba();
+                await serverServicesManager.CargarDatosDePrueba();
                 Console.WriteLine("Su aplicación se iniciara con datos de prueba");
             }
             else

@@ -34,7 +34,7 @@ namespace LoggAPI
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
                     webBuilder.UseStartup<Startup>();
-                    webBuilder.UseUrls("https://localhost:5040");
+                    webBuilder.UseUrls("https://localhost:5002");
                 });
         private static void DeclareQueue(IModel channel)
         {
